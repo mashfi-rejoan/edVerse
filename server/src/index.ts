@@ -12,13 +12,35 @@ const app = express();
 
 // Connect to MongoDB
 connectDB();
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
+    credentials: true
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok' });
+});
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
@@ -30,9 +52,12 @@ app.use((_req, res) => {
 });
 
 // Error handler
-app.use((err: Error, _req: express.Request, res: express.Response) => {
+app.use((err: Error, _req: express.Request, res: express.Response, next: express.NextFunction) => {
   // eslint-disable-next-line no-console
   console.error('Server error:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
   res.status(500).json({ message: 'Internal server error' });
 });
 
