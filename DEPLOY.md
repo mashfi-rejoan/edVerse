@@ -4,9 +4,9 @@
 1. Push code to GitHub (branch: `main`).
 2. Create a new Web Service in Render:
    - Repository: this repo
-   - Root Directory: `server`
-   - Build Command: `npm install && npm run build`
-   - Start Command: `npm run start`
+   - Root Directory: repo root (default)
+   - Build Command: `npm install && npm run build --workspace server`
+   - Start Command: `npm run start --workspace server`
    - Health Check Path: `/api/health`
    - Auto Deploy: enabled
 3. Environment Variables (Render):

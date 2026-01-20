@@ -3,10 +3,9 @@ services:
     name: edverse-backend
     env: node
     region: oregon
-    rootDirectory: server
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
+    buildCommand: npm install && npm run build --workspace server
+    startCommand: npm run start --workspace server
     autoDeploy: true
     healthCheckPath: /api/health
     envVars:
