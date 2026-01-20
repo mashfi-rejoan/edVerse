@@ -1,0 +1,17 @@
+{
+  "name": "edverse",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "prepare": "npm run lint --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}
