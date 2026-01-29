@@ -1,49 +1,201 @@
-Vercel Deployment Checklist (Frontend) + Backend Hosting Steps
+COMPLETE DEPLOYMENT GUIDE - edVerse Project
+============================================
 
-A) What I already prepared
-- Frontend uses a shared API base helper (client/src/utils/apiBase.ts).
-- Vercel SPA rewrite added (client/vercel.json).
-- Local env updated to use API origin only (client/.env.local).
-- .env example created (client/.env.example).
+PROJECT STATUS: ✅ READY FOR PRODUCTION DEPLOYMENT
 
-B) Backend hosting (you must do this)
-1) Choose a backend host (Render, Railway, Fly.io, etc.).
-2) Deploy the server folder as a Node app.
-3) Set environment variables from server/.env.example:
-   - PORT (or leave platform default)
-   - MONGODB_URI
-   - JWT_ACCESS_SECRET
-   - JWT_REFRESH_SECRET
-   - CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET (if using uploads)
-   - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS (if using email)
-   - CLIENT_ORIGIN = your Vercel frontend domain (e.g., https://edverse.vercel.app)
-4) Build command: npm run build
-5) Start command: npm run start
-6) After deploy, copy the backend base URL (e.g., https://edverse-api.onrender.com).
+============================================
+PART A: BACKEND DEPLOYMENT ON RENDER
+============================================
 
-C) Frontend deployment to Vercel (you must do this)
-1) Create a new Vercel project from your GitHub repo.
-2) Set Root Directory to: client
-3) Framework preset: Vite
-4) Build command: npm run build
-5) Output directory: dist
-6) Environment Variables:
-   - VITE_API_URL = https://<your-backend-domain>
-     (Important: no trailing slash, no /api suffix.)
-7) Deploy.
+STEP 1: Update Render Configuration (CRITICAL!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Go to your Render service settings:
+1. Click on your edverse-api service
+2. Go to "Settings"
+3. Update these fields:
 
-D) Post-deploy verification
-1) Open the Vercel URL and sign in.
-2) Confirm API calls work (complaints, library, blood donation, chatbot).
-3) If API calls fail with CORS:
-   - Ensure CLIENT_ORIGIN on backend matches the Vercel URL.
-   - Redeploy backend.
+BUILD COMMAND:
+  npm install && npm run build
 
-E) Optional: Custom domain
-1) Add the domain in Vercel.
-2) Update CLIENT_ORIGIN on backend to the new domain.
-3) Update VITE_API_URL only if backend domain changes.
+START COMMAND:
+  npm start
 
-Notes
-- The frontend now expects VITE_API_URL to be the backend origin only.
-- API paths are called as /api/... on that base.
+ROOT DIRECTORY:
+  server
+
+4. Save and click "Manual Deploy"
+
+STEP 2: Add Environment Variables on Render
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Go to Environment:
+- PORT: 4000 (optional, Render uses PORT env by default)
+- MONGODB_URI: mongodb+srv://20245103183:20245103183@cluster0.b5xhci1.mongodb.net/edverse?appName=Cluster0
+- JWT_ACCESS_SECRET: your-access-secret-change-this-in-production
+- JWT_REFRESH_SECRET: your-refresh-secret-change-this-in-production
+- CLOUDINARY_CLOUD_NAME: (leave empty if not using)
+- CLOUDINARY_API_KEY: (leave empty if not using)
+- CLOUDINARY_API_SECRET: (leave empty if not using)
+- SMTP_HOST: smtp.gmail.com
+- SMTP_PORT: 587
+- SMTP_USER: (leave empty if not using)
+- SMTP_PASS: (leave empty if not using)
+- CLIENT_ORIGIN: (LEAVE EMPTY FOR NOW - update after Vercel deployment)
+
+STEP 3: Deploy on Render
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Render automatically deploys when you push to GitHub
+2. Monitor the build logs
+3. Once deployed, you'll get a URL like: https://edverse-api.onrender.com
+4. COPY THIS URL - you'll need it for frontend
+
+============================================
+PART B: FRONTEND DEPLOYMENT ON VERCEL
+============================================
+
+STEP 1: Go to Vercel
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Visit https://vercel.com
+2. Sign in with GitHub
+3. Click "New Project"
+4. Select repository: edVerse
+
+STEP 2: Configure Project
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Framework: Vite ✅
+Root Directory: client ✅
+Build Command: npm run build ✅
+Output Directory: dist ✅
+
+STEP 3: Set Environment Variables
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT: Use the Render URL you copied earlier!
+
+VITE_API_URL = https://edverse-api.onrender.com
+(NO /api suffix, NO trailing slash)
+
+STEP 4: Deploy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Click "Deploy"
+Wait 2-3 minutes
+You'll get a URL like: https://edverse.vercel.app
+
+STEP 5: Update Backend's CLIENT_ORIGIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Now go back to Render:
+1. Go to Environment
+2. Update CLIENT_ORIGIN: https://edverse.vercel.app
+3. Click "Deploy" to redeploy with new setting
+
+============================================
+PART C: TESTING
+============================================
+
+1. Open https://edverse.vercel.app
+2. Test registration and login
+3. Test each feature:
+   ✅ Dashboard
+   ✅ Courses
+   ✅ Attendance
+   ✅ Grades
+   ✅ Timetable
+   ✅ Assignments
+   ✅ Library (API call test)
+   ✅ Complaints (API call test)
+   ✅ Blood Donation (API call test)
+   ✅ Chatbot (API call test)
+
+If API calls fail with CORS error:
+→ Make sure CLIENT_ORIGIN on Render matches your Vercel URL
+→ Redeploy Render
+
+============================================
+DEPLOYMENT CHECKLIST
+============================================
+
+Backend (Render):
+☑ Build Command: npm install && npm run build
+☑ Start Command: npm start
+☑ Root Directory: server
+☑ Environment Variables: All set
+☑ MONGODB_URI: Connected and working
+☑ PORT: 4000
+☑ Health check: /api/health (should work)
+☑ Deployed URL: https://edverse-api.onrender.com
+
+Frontend (Vercel):
+☑ Root Directory: client
+☑ Framework: Vite
+☑ Build Command: npm run build
+☑ VITE_API_URL: Set to backend URL (no /api)
+☑ Deployed URL: https://edverse.vercel.app
+
+Integration:
+☑ Backend CLIENT_ORIGIN: Updated to Vercel URL
+☑ CORS: Properly configured
+☑ API calls: All working
+☑ WebSockets: Available (if needed)
+
+============================================
+PRODUCTION NOTES
+============================================
+
+1. Change JWT secrets to strong random values
+2. Don't expose .env file
+3. Monitor Render & Vercel logs regularly
+4. Set up monitoring/alerts
+5. Consider upgrading from free tier for production
+6. Enable auto-deploys for both services
+7. Set up custom domain if needed
+8. Enable HTTPS (automatic on both platforms)
+
+============================================
+QUICK REFERENCE
+============================================
+
+Local Development:
+Backend: http://localhost:4000
+Frontend: http://localhost:5173
+Database: MongoDB Atlas
+
+Production:
+Backend: https://edverse-api.onrender.com
+Frontend: https://edverse.vercel.app
+Database: MongoDB Atlas (same)
+
+API Base URL:
+Development: http://localhost:4000
+Production: https://edverse-api.onrender.com
+(Frontend will use VITE_API_URL to construct full paths)
+
+============================================
+TROUBLESHOOTING
+============================================
+
+Build fails on Render?
+→ Check Build Command is: npm install && npm run build
+→ Verify Root Directory is: server
+→ Check that server/package.json exists
+
+Cannot find module dist/index.js?
+→ Build Command didn't run properly
+→ Update the command field and redeploy
+
+CORS errors?
+→ Check CLIENT_ORIGIN on Render backend
+→ Should be exactly: https://edverse.vercel.app
+→ Redeploy Render after updating
+
+API calls return 404?
+→ Check VITE_API_URL on Vercel
+→ Should be: https://edverse-api.onrender.com (no /api)
+→ Redeploy Vercel after updating
+
+Cannot connect to MongoDB?
+→ Verify MONGODB_URI is correct
+→ Check IP whitelist on MongoDB Atlas (allow 0.0.0.0 for testing)
+→ Verify credentials are correct
+
+============================================
+YOU ARE NOW READY TO DEPLOY! 🚀
+============================================
+
