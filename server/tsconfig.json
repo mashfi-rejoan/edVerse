@@ -12,7 +12,9 @@
     "declarationMap": true,
     "sourceMap": true,
     "noImplicitAny": false,
-    "strict": false
+    "strict": false,
+    "allowJs": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

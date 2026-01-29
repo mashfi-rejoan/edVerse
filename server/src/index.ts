@@ -5,9 +5,9 @@ import cookieParser from 'cookie-parser';
 import connectDB from './config/database';
 import authRoutes from './routes/auth';
 // Import shared modules routes
-const sharedModulesRoutes = require('./routes/sharedModules');
+const sharedModulesRoutes = require('./routes/sharedModules.js');
 // Import database schemas
-const { Complaint, Library } = require('./database/schemas');
+const { Complaint, Library } = require('./database/schemas.js');
 
 // Load environment variables
 dotenv.config();
@@ -41,13 +41,13 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Import all routes
-const bloodDonationRoutes = require('./routes/bloodDonation');
-const cafeteriaRoutes = require('./routes/cafeteria');
-const chatbotRoutes = require('./routes/chatbot');
-const notificationRoutes = require('./routes/notifications');
-const analyticsRoutes = require('./routes/analytics');
-const moderationRoutes = require('./routes/moderation');
-const googleClassroomRoutes = require('./routes/googleClassroom');
+const bloodDonationRoutes = require('./routes/bloodDonation.js');
+const cafeteriaRoutes = require('./routes/cafeteria.js');
+const chatbotRoutes = require('./routes/chatbot.js');
+const notificationRoutes = require('./routes/notifications.js');
+const analyticsRoutes = require('./routes/analytics.js');
+const moderationRoutes = require('./routes/moderation.js');
+const googleClassroomRoutes = require('./routes/googleClassroom.js');
 
 // Routes
 app.use('/api/auth', authRoutes);
