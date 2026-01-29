@@ -1,0 +1,49 @@
+Vercel Deployment Checklist (Frontend) + Backend Hosting Steps
+
+A) What I already prepared
+- Frontend uses a shared API base helper (client/src/utils/apiBase.ts).
+- Vercel SPA rewrite added (client/vercel.json).
+- Local env updated to use API origin only (client/.env.local).
+- .env example created (client/.env.example).
+
+B) Backend hosting (you must do this)
+1) Choose a backend host (Render, Railway, Fly.io, etc.).
+2) Deploy the server folder as a Node app.
+3) Set environment variables from server/.env.example:
+   - PORT (or leave platform default)
+   - MONGODB_URI
+   - JWT_ACCESS_SECRET
+   - JWT_REFRESH_SECRET
+   - CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET (if using uploads)
+   - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS (if using email)
+   - CLIENT_ORIGIN = your Vercel frontend domain (e.g., https://edverse.vercel.app)
+4) Build command: npm run build
+5) Start command: npm run start
+6) After deploy, copy the backend base URL (e.g., https://edverse-api.onrender.com).
+
+C) Frontend deployment to Vercel (you must do this)
+1) Create a new Vercel project from your GitHub repo.
+2) Set Root Directory to: client
+3) Framework preset: Vite
+4) Build command: npm run build
+5) Output directory: dist
+6) Environment Variables:
+   - VITE_API_URL = https://<your-backend-domain>
+     (Important: no trailing slash, no /api suffix.)
+7) Deploy.
+
+D) Post-deploy verification
+1) Open the Vercel URL and sign in.
+2) Confirm API calls work (complaints, library, blood donation, chatbot).
+3) If API calls fail with CORS:
+   - Ensure CLIENT_ORIGIN on backend matches the Vercel URL.
+   - Redeploy backend.
+
+E) Optional: Custom domain
+1) Add the domain in Vercel.
+2) Update CLIENT_ORIGIN on backend to the new domain.
+3) Update VITE_API_URL only if backend domain changes.
+
+Notes
+- The frontend now expects VITE_API_URL to be the backend origin only.
+- API paths are called as /api/... on that base.
