@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import './TeacherDashboard.css';
 import { apiUrl } from '../utils/apiBase';
 
@@ -81,15 +81,15 @@ const TeacherDashboard = () => {
         {/* Create Assignment Section */}
         <div className="card create-assignment-card">
           <h2>Create Assignment</h2>
-          <form onSubmit={(e) => {
+          <form onSubmit={(e: FormEvent<HTMLFormElement>) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const formData = new FormData(e.currentTarget);
             handleCreateAssignment({
-              title: formData.get('title'),
-              description: formData.get('description'),
-              dueDate: formData.get('dueDate'),
+              title: formData.get('title') as string,
+              description: formData.get('description') as string,
+              dueDate: formData.get('dueDate') as string,
             });
-            e.target.reset();
+            (e.currentTarget as HTMLFormElement).reset();
           }}>
             <input type="text" name="title" placeholder="Assignment Title" required />
             <textarea name="description" placeholder="Assignment Description..."></textarea>
@@ -101,14 +101,14 @@ const TeacherDashboard = () => {
         {/* Create Announcement Section */}
         <div className="card create-announcement-card">
           <h2>Create Announcement</h2>
-          <form onSubmit={(e) => {
+          <form onSubmit={(e: FormEvent<HTMLFormElement>) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const formData = new FormData(e.currentTarget);
             handleCreateAnnouncement({
-              title: formData.get('title'),
-              content: formData.get('content'),
+              title: formData.get('title') as string,
+              content: formData.get('content') as string,
             });
-            e.target.reset();
+            (e.currentTarget as HTMLFormElement).reset();
           }}>
             <input type="text" name="title" placeholder="Announcement Title" required />
             <textarea name="content" placeholder="Announcement Content..." required></textarea>

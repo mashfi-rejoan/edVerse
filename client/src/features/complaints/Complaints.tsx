@@ -51,7 +51,7 @@ const Complaints = () => {
         body: JSON.stringify({
           title,
           description,
-          createdBy: user?._id
+          createdBy: user?.id
         })
       });
 

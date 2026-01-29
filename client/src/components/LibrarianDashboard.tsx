@@ -88,15 +88,15 @@ const LibrarianDashboard = () => {
           <h2>Add New Book</h2>
           <form onSubmit={(e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const formData = new FormData(e.currentTarget as HTMLFormElement);
             handleAddBook({
-              title: formData.get('title'),
-              author: formData.get('author'),
-              category: formData.get('category'),
-              totalCopies: parseInt(formData.get('totalCopies')),
-              availableCopies: parseInt(formData.get('totalCopies')),
+              title: formData.get('title') as string,
+              author: formData.get('author') as string,
+              category: formData.get('category') as string,
+              totalCopies: parseInt(formData.get('totalCopies') as string),
+              availableCopies: parseInt(formData.get('totalCopies') as string),
             });
-            e.target.reset();
+            (e.currentTarget as HTMLFormElement).reset();
           }}>
             <input type="text" name="title" placeholder="Book Title" required />
             <input type="text" name="author" placeholder="Author" required />

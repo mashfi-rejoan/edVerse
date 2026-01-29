@@ -101,12 +101,12 @@ const StudentDashboard = () => {
           <h2>Submit a Complaint</h2>
           <form onSubmit={(e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const formData = new FormData(e.currentTarget as HTMLFormElement);
             handleSubmitComplaint({
-              title: formData.get('title'),
-              description: formData.get('description'),
+              title: formData.get('title') as string,
+              description: formData.get('description') as string,
             });
-            e.target.reset();
+            (e.currentTarget as HTMLFormElement).reset();
           }}>
             <input type="text" name="title" placeholder="Complaint Title" required />
             <textarea name="description" placeholder="Describe your complaint..." required></textarea>

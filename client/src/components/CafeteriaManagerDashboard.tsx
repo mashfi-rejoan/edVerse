@@ -87,15 +87,15 @@ const CafeteriaManagerDashboard = () => {
           <h2>Add New Item</h2>
           <form onSubmit={(e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const formData = new FormData(e.currentTarget as HTMLFormElement);
             handleAddMenuItem({
-              itemName: formData.get('itemName'),
-              description: formData.get('description'),
-              price: parseFloat(formData.get('price')),
-              category: formData.get('category'),
-              availableQuantity: parseInt(formData.get('quantity')),
+              itemName: formData.get('itemName') as string,
+              description: formData.get('description') as string,
+              price: parseFloat(formData.get('price') as string),
+              category: formData.get('category') as string,
+              availableQuantity: parseInt(formData.get('quantity') as string),
             });
-            e.target.reset();
+            (e.currentTarget as HTMLFormElement).reset();
           }}>
             <input type="text" name="itemName" placeholder="Item Name" required />
             <textarea name="description" placeholder="Description..."></textarea>
