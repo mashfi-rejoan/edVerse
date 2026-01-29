@@ -48,6 +48,7 @@ const notificationRoutes = require('./routes/notifications.js');
 const analyticsRoutes = require('./routes/analytics.js');
 const moderationRoutes = require('./routes/moderation.js');
 const googleClassroomRoutes = require('./routes/googleClassroom.js');
+const courseRoutes = require('./routes/courses.js');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -59,6 +60,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/moderation', moderationRoutes);
 app.use('/api/google-classroom', googleClassroomRoutes);
+app.use('/api/courses', courseRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
