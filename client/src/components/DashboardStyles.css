@@ -1,0 +1,193 @@
+.student-dashboard, .teacher-dashboard, .admin-dashboard, .moderator-dashboard, 
+.cafeteria-manager-dashboard, .librarian-dashboard {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  color: #0C2B4E;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card h2 {
+  color: #0C2B4E;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.card h3 {
+  color: #070738;
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+
+.card p {
+  color: #555;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card li {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.card li:last-child {
+  border-bottom: none;
+}
+
+.card form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card input, .card textarea, .card select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.card input:focus, .card textarea:focus, .card select:focus {
+  outline: none;
+  border-color: #0C2B4E;
+  box-shadow: 0 0 0 3px rgba(12, 43, 78, 0.1);
+}
+
+.card button {
+  padding: 0.75rem 1.5rem;
+  background: #0C2B4E;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.card button:hover {
+  background: #070738;
+}
+
+.card button:active {
+  transform: scale(0.98);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.actions button {
+  flex: 1;
+  margin-right: 0;
+}
+
+.status-healthy {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.notifications-alert {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  color: #856404;
+  font-weight: 500;
+}
+
+.loading {
+  text-align: center;
+  color: #0C2B4E;
+  font-weight: 500;
+  padding: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions button {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .card button {
+    width: 100%;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  padding: 1rem;
+
+  .dashboard-grid {
+    gap: 1rem;
+  }
+
+  .card {
+    padding: 0.75rem;
+  }
+
+  .card h2 {
+    font-size: 1rem;
+  }
+
+  .card h3 {
+    font-size: 0.9rem;
+  }
+
+  .card p {
+    font-size: 0.8rem;
+  }
+}

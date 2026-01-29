@@ -4,6 +4,10 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/database';
 import authRoutes from './routes/auth';
+// Import shared modules routes
+const sharedModulesRoutes = require('./routes/sharedModules');
+// Import database schemas
+const { Complaint, Library } = require('./database/schemas');
 
 // Load environment variables
 dotenv.config();
@@ -36,8 +40,26 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// Import all routes
+const bloodDonationRoutes = require('./routes/bloodDonation');
+const cafeteriaRoutes = require('./routes/cafeteria');
+const chatbotRoutes = require('./routes/chatbot');
+const notificationRoutes = require('./routes/notifications');
+const analyticsRoutes = require('./routes/analytics');
+const moderationRoutes = require('./routes/moderation');
+const googleClassroomRoutes = require('./routes/googleClassroom');
+
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/shared', sharedModulesRoutes);
+app.use('/api/blood-donation', bloodDonationRoutes);
+app.use('/api/cafeteria', cafeteriaRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/moderation', moderationRoutes);
+app.use('/api/google-classroom', googleClassroomRoutes);
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
@@ -45,6 +67,10 @@ app.get('/api/health', (_req, res) => {
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
+
+// Example usage of schemas
+// This is a placeholder for future API integration
+console.log('Schemas loaded:', { Complaint, Library });
 
 // 404 handler
 app.use((_req, res) => {
