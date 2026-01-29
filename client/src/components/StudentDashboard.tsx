@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './StudentDashboard.css';
+import { apiUrl } from '../utils/apiBase';
 
 const StudentDashboard = () => {
   const [announcements, setAnnouncements] = useState([]);
@@ -26,7 +27,7 @@ const StudentDashboard = () => {
 
   const handleSubmitComplaint = async (complaint) => {
     try {
-      const response = await fetch('/api/shared/complaints', {
+      const response = await fetch(apiUrl('/api/shared/complaints'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(complaint),

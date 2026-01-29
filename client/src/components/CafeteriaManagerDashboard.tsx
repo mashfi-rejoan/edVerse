@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from './DashboardLayout';
+import { apiUrl } from '../utils/apiBase';
 
 const CafeteriaManagerDashboard = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -14,7 +15,7 @@ const CafeteriaManagerDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/cafeteria');
+      const response = await fetch(apiUrl('/api/cafeteria'));
       const data = await response.json();
       setMenuItems(data);
       setLoading(false);
@@ -26,7 +27,7 @@ const CafeteriaManagerDashboard = () => {
 
   const handleAddMenuItem = async (item) => {
     try {
-      const response = await fetch('/api/cafeteria', {
+      const response = await fetch(apiUrl('/api/cafeteria'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item),
@@ -41,7 +42,7 @@ const CafeteriaManagerDashboard = () => {
 
   const handleUpdateItem = async (id, updates) => {
     try {
-      const response = await fetch(`/api/cafeteria/${id}`, {
+      const response = await fetch(apiUrl(`/api/cafeteria/${id}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),

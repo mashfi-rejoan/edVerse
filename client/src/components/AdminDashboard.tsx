@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AdminDashboard.css';
+import { apiUrl } from '../utils/apiBase';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -26,7 +27,7 @@ const AdminDashboard = () => {
 
   const handleManageUsers = async (userId, action) => {
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await fetch(apiUrl(`/api/users/${userId}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),

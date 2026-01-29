@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { HeartPulse, Droplet } from 'lucide-react';
+import { apiUrl } from '../../utils/apiBase';
 
 interface BloodDonation {
   _id: string;
@@ -25,7 +26,7 @@ const BloodDonation = () => {
   const fetchDonors = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:4000/api/blood-donation');
+      const response = await fetch(apiUrl('/api/blood-donation'));
       if (response.ok) {
         const data = await response.json();
         setDonors(data);

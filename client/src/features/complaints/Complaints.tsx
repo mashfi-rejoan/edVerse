@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { MessageSquare, Send } from 'lucide-react';
 import authService from '../../services/authService';
+import { apiUrl } from '../../utils/apiBase';
 
 interface Complaint {
   _id: string;
@@ -25,7 +26,7 @@ const Complaints = () => {
   const fetchComplaints = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:4000/api/shared/complaints');
+      const response = await fetch(apiUrl('/api/shared/complaints'));
       if (response.ok) {
         const data = await response.json();
         setComplaints(data);
@@ -44,7 +45,7 @@ const Complaints = () => {
     try {
       setSubmitting(true);
       const user = authService.getCurrentUser();
-      const response = await fetch('http://localhost:4000/api/shared/complaints', {
+      const response = await fetch(apiUrl('/api/shared/complaints'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,5 +1,6 @@
 // Chatbot component for student support
 import React, { useState, useRef, useEffect } from 'react';
+import { apiUrl } from '../utils/apiBase';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +35,7 @@ const Chatbot = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/chatbot/message', {
+      const response = await fetch(apiUrl('/api/chatbot/message'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

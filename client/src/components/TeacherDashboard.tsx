@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './TeacherDashboard.css';
+import { apiUrl } from '../utils/apiBase';
 
 const TeacherDashboard = () => {
   const [classes, setClasses] = useState([]);
@@ -27,7 +28,7 @@ const TeacherDashboard = () => {
 
   const handleCreateAssignment = async (assignment) => {
     try {
-      const response = await fetch('/api/assignments', {
+      const response = await fetch(apiUrl('/api/assignments'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(assignment),
@@ -42,7 +43,7 @@ const TeacherDashboard = () => {
 
   const handleCreateAnnouncement = async (announcement) => {
     try {
-      const response = await fetch('/api/announcements', {
+      const response = await fetch(apiUrl('/api/announcements'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(announcement),

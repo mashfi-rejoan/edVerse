@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from './DashboardLayout';
+import { apiUrl } from '../utils/apiBase';
 
 const LibrarianDashboard = () => {
   const [books, setBooks] = useState([]);
@@ -14,7 +15,7 @@ const LibrarianDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/shared/library');
+      const response = await fetch(apiUrl('/api/shared/library'));
       const data = await response.json();
       setBooks(data);
       setLoading(false);
@@ -26,7 +27,7 @@ const LibrarianDashboard = () => {
 
   const handleAddBook = async (book) => {
     try {
-      const response = await fetch('/api/shared/library', {
+      const response = await fetch(apiUrl('/api/shared/library'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(book),

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from './DashboardLayout';
+import { apiUrl } from '../utils/apiBase';
 
 const ModeratorDashboard = () => {
   const [pendingComplaints, setPendingComplaints] = useState([]);
@@ -17,7 +18,7 @@ const ModeratorDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/moderation/pending');
+      const response = await fetch(apiUrl('/api/moderation/pending'));
       const data = await response.json();
       
       setPendingComplaints(data.filter(item => item.itemType === 'Complaint'));
@@ -34,7 +35,7 @@ const ModeratorDashboard = () => {
   const setupNotificationListener = async () => {
     try {
       const userId = localStorage.getItem('userId'); // Get from auth context
-      const response = await fetch(`/api/notifications/user/${userId}`);
+      const response = await fetch(apiUrl(`/api/notifications/user/${userId}`));
       const data = await response.json();
       setNotifications(data.filter(n => !n.read));
     } catch (error) {
@@ -44,7 +45,7 @@ const ModeratorDashboard = () => {
 
   const handleApprove = async (id) => {
     try {
-      const response = await fetch(`/api/moderation/${id}/approve`, {
+      const response = await fetch(apiUrl(`/api/moderation/${id}/approve`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reviewedBy: localStorage.getItem('userId') }),
@@ -59,7 +60,7 @@ const ModeratorDashboard = () => {
 
   const handleReject = async (id, reason) => {
     try {
-      const response = await fetch(`/api/moderation/${id}/reject`, {
+      const response = await fetch(apiUrl(`/api/moderation/${id}/reject`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason, reviewedBy: localStorage.getItem('userId') }),

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Book, Search } from 'lucide-react';
+import { apiUrl } from '../../utils/apiBase';
 
 interface LibraryBook {
   _id: string;
@@ -23,7 +24,7 @@ const Library = () => {
   const fetchBooks = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:4000/api/shared/library');
+      const response = await fetch(apiUrl('/api/shared/library'));
       if (response.ok) {
         const data = await response.json();
         setBooks(data);

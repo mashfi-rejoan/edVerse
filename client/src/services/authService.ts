@@ -1,12 +1,13 @@
 import axios from 'axios';
+import { apiUrl } from '../utils/apiBase';
 
-// Get API URL from environment or use localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+// API base path
+const API_BASE = apiUrl('/api');
 
-console.log('API URL configured as:', API_URL);
+console.log('API URL configured as:', API_BASE);
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json'
   },
@@ -33,7 +34,7 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
+        const response = await axios.post(`${API_BASE}/auth/refresh`, {
           refreshToken
         });
 
