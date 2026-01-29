@@ -10,6 +10,12 @@ const courseSchema = new mongoose.Schema({
   credits: { type: Number, required: true, default: 3 },
   department: { type: String },
   description: { type: String },
+  category: { type: String },
+  courseType: { type: String, enum: ['Theory', 'Lab'], default: 'Theory' },
+  prerequisite: { type: String },
+  bnqfCode: { type: String },
+  level: { type: Number },
+  term: { type: Number },
   semester: { 
     type: String, 
     required: true,
