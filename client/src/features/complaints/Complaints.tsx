@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { MessageSquare, Send } from 'lucide-react';
+import { MessageSquare, Send, XCircle } from 'lucide-react';
 import authService from '../../services/authService';
 import { apiUrl } from '../../utils/apiBase';
 
@@ -8,15 +8,28 @@ interface Complaint {
   _id: string;
   title: string;
   description: string;
+  category: string;
   status: string;
   createdAt: string;
+  withdrawnAt?: string;
 }
+
+const COMPLAINT_CATEGORIES = [
+  'Academic',
+  'Facility',
+  'Faculty',
+  'Administration',
+  'Technical',
+  'Harassment',
+  'Other',
+];
 
 const Complaints = () => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('Academic');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -51,6 +64,7 @@ const Complaints = () => {
         body: JSON.stringify({
           title,
           description,
+          category,
           createdBy: user?.id
         })
       });
@@ -60,6 +74,7 @@ const Complaints = () => {
         setComplaints([newComplaint, ...complaints]);
         setTitle('');
         setDescription('');
+        setCategory('Academic');
         alert('Complaint submitted successfully!');
       }
     } catch (error) {
@@ -67,6 +82,32 @@ const Complaints = () => {
       alert('Failed to submit complaint. Please try again.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleWithdraw = async (complaintId: string) => {
+    if (!confirm('Are you sure you want to withdraw this complaint?')) return;
+
+    try {
+      const response = await fetch(apiUrl(`/api/shared/complaints/${complaintId}/withdraw`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        setComplaints(
+          complaints.map((c) =>
+            c._id === complaintId ? { ...c, status: 'Withdrawn', withdrawnAt: new Date().toISOString() } : c
+          )
+        );
+        alert('Complaint withdrawn successfully. Moderators have been notified.');
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to withdraw complaint');
+      }
+    } catch (error) {
+      console.error('Error withdrawing complaint:', error);
+      alert('Failed to withdraw complaint. Please try again.');
     }
   };
 
@@ -82,6 +123,23 @@ const Complaints = () => {
             Submit a Complaint
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                {COMPLAINT_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Title
@@ -137,21 +195,48 @@ const Complaints = () => {
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900">{complaint.title}</h3>
-                    <span
-                      className={`px-3 py-1 text-xs font-medium rounded-full ${
-                        complaint.status === 'Resolved'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {complaint.status}
-                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-gray-900">{complaint.title}</h3>
+                        <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                          {complaint.category}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-3 py-1 text-xs font-medium rounded-full ${
+                          complaint.status === 'Resolved'
+                            ? 'bg-green-100 text-green-800'
+                            : complaint.status === 'Withdrawn'
+                            ? 'bg-gray-100 text-gray-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {complaint.status}
+                      </span>
+                      {complaint.status === 'Pending' && (
+                        <button
+                          onClick={() => handleWithdraw(complaint._id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
+                          title="Withdraw complaint"
+                        >
+                          <XCircle size={18} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">{complaint.description}</p>
-                  <p className="text-xs text-gray-500">
-                    Submitted on {new Date(complaint.createdAt).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-500">
+                      Submitted on {new Date(complaint.createdAt).toLocaleDateString()}
+                    </p>
+                    {complaint.status === 'Withdrawn' && complaint.withdrawnAt && (
+                      <p className="text-xs text-gray-500">
+                        Withdrawn on {new Date(complaint.withdrawnAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

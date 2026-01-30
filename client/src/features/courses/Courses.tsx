@@ -1,487 +1,275 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { BookOpen, Users, GraduationCap } from 'lucide-react';
+import { BookOpen, User, Mail, FileText, Link as LinkIcon } from 'lucide-react';
+import axios from 'axios';
 import { apiUrl } from '../../utils/apiBase';
 
-interface Course {
+interface Teacher {
+  _id: string;
+  name: string;
+  email: string;
+  department?: string;
+  officeHours?: string;
+}
+
+interface EnrolledCourse {
   _id: string;
   courseCode: string;
   courseName: string;
-  instructorName: string;
   credits: number;
-  department?: string;
+  instructor?: Teacher;
+  instructorName?: string;
+  instructorEmail?: string;
   description?: string;
   semester: string;
   year: number;
-  enrollmentId?: string;
-  enrollmentStatus?: string;
-  grade?: string;
-}
-
-interface Semester {
-  semester: string;
-  year: number;
-}
-
-interface CourseMaterial {
-  _id: string;
-  title: string;
-  description?: string;
-  type: string;
-  fileUrl?: string;
-  dueDate?: string;
-  createdAt: string;
+  outline?: string;
+  materialsLink?: string;
 }
 
 const Courses = () => {
-  const [currentSemester, setCurrentSemester] = useState<Semester>({ semester: 'Spring', year: 2026 });
-  const [selectedSemester, setSelectedSemester] = useState<Semester>({ semester: 'Spring', year: 2026 });
-  const [availableSemesters, setAvailableSemesters] = useState<Semester[]>([]);
-  const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
-  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [courseMaterials, setCourseMaterials] = useState<CourseMaterial[]>([]);
-  const [activeTab, setActiveTab] = useState<'enrolled' | 'available' | 'materials'>('enrolled');
-  const [loading, setLoading] = useState(false);
+  const [courses, setCourses] = useState<EnrolledCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<EnrolledCourse | null>(null);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
-    fetchSemesters();
+    fetchEnrolledCourses();
   }, []);
 
-  useEffect(() => {
-    if (selectedSemester.semester && selectedSemester.year && user?.id) {
-      fetchEnrolledCourses();
-      if (activeTab === 'available') {
-        fetchAvailableCourses();
-      }
-    }
-  }, [selectedSemester, activeTab]);
-
-  useEffect(() => {
-    if (selectedCourse) {
-      fetchCourseMaterials(selectedCourse._id);
-    }
-  }, [selectedCourse]);
-
-  const fetchSemesters = async () => {
-    try {
-      const response = await fetch(apiUrl('/api/courses/semesters'), { credentials: 'include' });
-      const data = await response.json();
-      setCurrentSemester(data.current);
-      setSelectedSemester(data.current);
-      setAvailableSemesters(data.available || []);
-    } catch (error) {
-      console.error('Error fetching semesters:', error);
-    }
-  };
-
   const fetchEnrolledCourses = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const response = await fetch(
-        apiUrl(`/api/courses/student/${user.id}/courses?semester=${selectedSemester.semester}&year=${selectedSemester.year}`),
-        { credentials: 'include' }
+      const response = await axios.get(
+        apiUrl(`/api/courses/student/${user.id}/courses?semester=Spring&year=2026`),
+        { withCredentials: true }
       );
-      const data = await response.json();
-      setEnrolledCourses(data.courses || []);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching enrolled courses:', error);
-      setLoading(false);
-    }
-  };
-
-  const fetchAvailableCourses = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        apiUrl(`/api/courses/courses/available?semester=${selectedSemester.semester}&year=${selectedSemester.year}`),
-        { credentials: 'include' }
+      
+      const coursesData = response.data.courses || [];
+      const sortedCourses = coursesData.sort((a: EnrolledCourse, b: EnrolledCourse) => 
+        a.courseCode.localeCompare(b.courseCode)
       );
-      const data = await response.json();
-
-      const enrolledIds = enrolledCourses.map((c) => c._id);
-      const available = (data.courses || []).filter((c: Course) => !enrolledIds.includes(c._id));
-
-      setAvailableCourses(available);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching available courses:', error);
-      setLoading(false);
-    }
-  };
-
-  const fetchCourseMaterials = async (courseId: string) => {
-    try {
-      const response = await fetch(apiUrl(`/api/courses/course/${courseId}/materials`), {
-        credentials: 'include'
-      });
-      const data = await response.json();
-      setCourseMaterials(data.materials || []);
-    } catch (error) {
-      console.error('Error fetching course materials:', error);
-    }
-  };
-
-  const handleEnrollCourse = async (courseId: string) => {
-    try {
-      const response = await fetch(apiUrl('/api/courses/enroll'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          studentId: user.id,
-          courseId,
-          semester: selectedSemester.semester,
-          year: selectedSemester.year
-        })
-      });
-
-      if (response.ok) {
-        alert('Successfully enrolled in course!');
-        fetchEnrolledCourses();
-        fetchAvailableCourses();
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Failed to enroll');
+      setCourses(sortedCourses);
+      
+      if (sortedCourses.length > 0) {
+        setSelectedCourse(sortedCourses[0]);
       }
-    } catch (error) {
-      console.error('Error enrolling in course:', error);
-      alert('Failed to enroll in course');
+    } catch (err) {
+      setError('Failed to load enrolled courses');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDropCourse = async (enrollmentId: string) => {
-    if (!confirm('Are you sure you want to drop this course?')) return;
-
-    try {
-      const response = await fetch(apiUrl('/api/courses/drop'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ enrollmentId })
-      });
-
-      if (response.ok) {
-        alert('Course dropped successfully');
-        fetchEnrolledCourses();
-      } else {
-        alert('Failed to drop course');
-      }
-    } catch (error) {
-      console.error('Error dropping course:', error);
-      alert('Failed to drop course');
-    }
+  const handleMessageTeacher = (course: EnrolledCourse) => {
+    alert(`Message feature coming soon!\n\nYou will be able to email ${course.instructorName || 'the instructor'} at ${course.instructorEmail || 'their email'}`);
   };
-
-  const isCurrentSemester =
-    selectedSemester.semester === currentSemester.semester &&
-    selectedSemester.year === currentSemester.year;
-
-  const totalCredits = enrolledCourses.reduce((sum, c) => sum + (c.credits || 0), 0);
 
   return (
-    <DashboardLayout title="Courses">
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">My Courses</h1>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <GraduationCap size={18} />
-            <span>{enrolledCourses.length} courses enrolled</span>
-          </div>
+    <DashboardLayout title="My Courses">
+      <div className="p-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[#0C2B4E]">My Courses</h1>
+          <p className="text-gray-600 mt-2">View your enrolled courses, instructors, and course materials</p>
         </div>
 
-        {/* Semester Selector */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-700">Semester</label>
-            <select
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              value={`${selectedSemester.semester}-${selectedSemester.year}`}
-              onChange={(e) => {
-                const [semester, year] = e.target.value.split('-');
-                setSelectedSemester({ semester, year: parseInt(year) });
-                setSelectedCourse(null);
-                setActiveTab('enrolled');
-              }}
-            >
-              {availableSemesters.map((sem, idx) => (
-                <option key={idx} value={`${sem.semester}-${sem.year}`}>
-                  {sem.semester} {sem.year}
-                  {sem.semester === currentSemester.semester && sem.year === currentSemester.year && ' (Current)'}
-                </option>
-              ))}
-            </select>
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+            <div className="flex flex-col items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0C2B4E]"></div>
+              <p className="mt-4 text-gray-600">Loading your courses...</p>
+            </div>
           </div>
-          <div className="text-sm text-gray-600">
-            {isCurrentSemester ? '📅 Current Semester' : '📚 Past Semester'}
-          </div>
-        </div>
+        )}
 
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${
-              activeTab === 'enrolled' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
-            }`}
-            onClick={() => setActiveTab('enrolled')}
-          >
-            📖 My Courses
-          </button>
-          {isCurrentSemester && (
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm font-medium text-red-800">{error}</p>
+            </div>
             <button
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                activeTab === 'available' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
-              onClick={() => setActiveTab('available')}
+              onClick={fetchEnrolledCourses}
+              className="mt-3 px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded hover:bg-red-50 transition"
             >
-              ➕ Available Courses
+              Retry
             </button>
-          )}
-          {selectedCourse && (
-            <button
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                activeTab === 'materials' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
-              onClick={() => setActiveTab('materials')}
-            >
-              📚 Materials
-            </button>
-          )}
-        </div>
-
-        {/* Course Statistics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <BookOpen className="text-blue-600" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Courses</p>
-                <p className="text-2xl font-bold text-gray-900">{enrolledCourses.length}</p>
-              </div>
-            </div>
           </div>
+        )}
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <GraduationCap className="text-green-600" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Credits</p>
-                <p className="text-2xl font-bold text-gray-900">{totalCredits}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                <Users className="text-purple-600" size={24} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Selected Semester</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {selectedSemester.semester} {selectedSemester.year}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Courses List */}
-        {loading ? (
-          <div className="text-center text-gray-600 py-10">Loading courses...</div>
-        ) : (
+        {/* Main Content */}
+        {!loading && !error && (
           <>
-            {activeTab === 'enrolled' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {enrolledCourses.length > 0 ? (
-                  enrolledCourses.map((course) => (
-                    <div
-                      key={course._id}
-                      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{course.courseCode}</h3>
-                          <p className="text-base text-gray-700 font-medium">{course.courseName}</p>
-                        </div>
-                        <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">
-                          {course.credits} Credits
-                        </span>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Users size={16} />
-                          <span>{course.instructorName || 'TBA'}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <BookOpen size={16} />
-                          <span>{course.department || 'N/A'}</span>
-                        </div>
-
-                        {course.grade && (
-                          <div className="text-sm text-green-700 font-medium">Grade: {course.grade}</div>
-                        )}
-
-                        <div className="text-sm text-gray-600">
-                          Status: <span className="font-medium">{course.enrollmentStatus || 'Enrolled'}</span>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-                          onClick={() => {
-                            setSelectedCourse(course);
-                            setActiveTab('materials');
-                          }}
-                        >
-                          View Details
-                        </button>
-                        <button
-                          className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium"
-                          onClick={() => {
-                            setSelectedCourse(course);
-                            setActiveTab('materials');
-                          }}
-                        >
-                          Resources
-                        </button>
-                        {isCurrentSemester && course.enrollmentStatus === 'Enrolled' && course.enrollmentId && (
-                          <button
-                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
-                            onClick={() => handleDropCourse(course.enrollmentId!)}
-                          >
-                            Drop
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center text-gray-600 py-10 col-span-full">
-                    No enrolled courses for this semester.
-                  </div>
-                )}
+            {courses.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+                <div className="text-center">
+                  <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-4 text-lg font-medium text-gray-900">No Enrolled Courses</h3>
+                  <p className="mt-2 text-sm text-gray-600">
+                    You haven't enrolled in any courses yet. Visit the Registration page to enroll.
+                  </p>
+                </div>
               </div>
-            )}
-
-            {activeTab === 'available' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {availableCourses.length > 0 ? (
-                  availableCourses.map((course) => (
-                    <div
-                      key={course._id}
-                      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{course.courseCode}</h3>
-                          <p className="text-base text-gray-700 font-medium">{course.courseName}</p>
-                        </div>
-                        <span className="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-full">
-                          {course.credits} Credits
-                        </span>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Users size={16} />
-                          <span>{course.instructorName || 'TBA'}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <BookOpen size={16} />
-                          <span>{course.department || 'N/A'}</span>
-                        </div>
-
-                        {course.description && (
-                          <p className="text-sm text-gray-600">{course.description}</p>
-                        )}
-                      </div>
-
-                      <div className="mt-4 flex gap-2">
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Course List Sidebar */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <h2 className="text-lg font-semibold text-[#0C2B4E] mb-4">Enrolled Courses</h2>
+                    <div className="space-y-2">
+                      {courses.map((course) => (
                         <button
-                          className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
-                          onClick={() => handleEnrollCourse(course._id)}
+                          key={course._id}
+                          onClick={() => setSelectedCourse(course)}
+                          className={`w-full text-left p-4 rounded-lg border transition ${
+                            selectedCourse?._id === course._id
+                              ? 'bg-[#0C2B4E] text-white border-[#0C2B4E]'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-[#1A3D64] hover:bg-gray-50'
+                          }`}
                         >
-                          Enroll
+                          <div className="flex items-start gap-3">
+                            <BookOpen size={20} className={selectedCourse?._id === course._id ? 'text-white' : 'text-[#1D546C]'} />
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-semibold text-sm ${selectedCourse?._id === course._id ? 'text-white' : 'text-[#0C2B4E]'}`}>
+                                {course.courseCode}
+                              </p>
+                              <p className={`text-sm mt-1 line-clamp-2 ${selectedCourse?._id === course._id ? 'text-white/90' : 'text-gray-600'}`}>
+                                {course.courseName}
+                              </p>
+                              <p className={`text-xs mt-1 ${selectedCourse?._id === course._id ? 'text-white/80' : 'text-gray-500'}`}>
+                                {course.credits} Credits
+                              </p>
+                            </div>
+                          </div>
                         </button>
-                      </div>
+                      ))}
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center text-gray-600 py-10 col-span-full">
-                    No available courses for enrollment.
                   </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'materials' && selectedCourse && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">{selectedCourse.courseName}</h2>
-                    <p className="text-sm text-gray-600">{selectedCourse.courseCode}</p>
-                  </div>
-                  <button
-                    className="px-3 py-2 text-sm bg-gray-100 rounded-lg"
-                    onClick={() => setActiveTab('enrolled')}
-                  >
-                    Back to Courses
-                  </button>
                 </div>
 
-                {courseMaterials.length > 0 ? (
-                  <div className="space-y-4">
-                    {courseMaterials.map((material) => (
-                      <div key={material._id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between">
+                {/* Course Details */}
+                <div className="lg:col-span-2">
+                  {selectedCourse && (
+                    <div className="space-y-6">
+                      {/* Course Info Card */}
+                      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-start justify-between mb-4">
                           <div>
-                            <h3 className="text-lg font-medium text-gray-900">{material.title}</h3>
-                            {material.description && (
-                              <p className="text-sm text-gray-600 mt-1">{material.description}</p>
-                            )}
+                            <h2 className="text-2xl font-bold text-[#0C2B4E]">{selectedCourse.courseCode}</h2>
+                            <p className="text-lg text-gray-700 mt-1">{selectedCourse.courseName}</p>
                           </div>
-                          <span className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
-                            {material.type}
+                          <span className="px-3 py-1 text-sm font-semibold text-white bg-[#1D546C] rounded-full">
+                            {selectedCourse.credits} Credits
                           </span>
                         </div>
-                        <div className="text-xs text-gray-500 mt-2">
-                          {new Date(material.createdAt).toLocaleDateString()}
-                          {material.dueDate && (
-                            <span className="ml-3 text-red-600">
-                              Due: {new Date(material.dueDate).toLocaleDateString()}
-                            </span>
-                          )}
+                        
+                        {selectedCourse.description && (
+                          <div className="mt-4">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-2">Course Description</h3>
+                            <p className="text-sm text-gray-600">{selectedCourse.description}</p>
+                          </div>
+                        )}
+
+                        <div className="mt-4 flex items-center gap-4 text-sm text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                            </svg>
+                            {selectedCourse.semester} {selectedCourse.year}
+                          </span>
                         </div>
-                        {material.fileUrl && (
+                      </div>
+
+                      {/* Instructor Card */}
+                      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <User className="text-[#1D546C]" size={20} />
+                          <h3 className="text-lg font-semibold text-[#0C2B4E]">Instructor</h3>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-sm text-gray-600">Name</p>
+                            <p className="text-base font-medium text-gray-900">
+                              {selectedCourse.instructorName || 'TBA'}
+                            </p>
+                          </div>
+                          
+                          {selectedCourse.instructorEmail && (
+                            <div>
+                              <p className="text-sm text-gray-600">Email</p>
+                              <p className="text-base text-gray-900">{selectedCourse.instructorEmail}</p>
+                            </div>
+                          )}
+                          
+                          {selectedCourse.instructor?.department && (
+                            <div>
+                              <p className="text-sm text-gray-600">Department</p>
+                              <p className="text-base text-gray-900">{selectedCourse.instructor.department}</p>
+                            </div>
+                          )}
+                          
+                          {selectedCourse.instructor?.officeHours && (
+                            <div>
+                              <p className="text-sm text-gray-600">Office Hours</p>
+                              <p className="text-base text-gray-900">{selectedCourse.instructor.officeHours}</p>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => handleMessageTeacher(selectedCourse)}
+                            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0C2B4E] text-white rounded-lg hover:bg-[#1A3D64] transition font-medium"
+                          >
+                            <Mail size={18} />
+                            Message/Email Instructor
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Course Materials */}
+                      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <FileText className="text-[#1D546C]" size={20} />
+                          <h3 className="text-lg font-semibold text-[#0C2B4E]">Course Materials</h3>
+                        </div>
+
+                        {selectedCourse.materialsLink ? (
                           <a
-                            href={material.fileUrl}
+                            href={selectedCourse.materialsLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block mt-3 text-sm text-blue-600 hover:underline"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#0C2B4E] text-white rounded-lg hover:bg-[#1A3D64] transition font-medium"
                           >
-                            Download
+                            <LinkIcon size={18} />
+                            Course Materials
                           </a>
+                        ) : (
+                          <button
+                            disabled
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed font-medium"
+                          >
+                            <FileText size={18} />
+                            Course Materials (Coming Soon)
+                          </button>
+                        )}
+                        
+                        {!selectedCourse.materialsLink && (
+                          <p className="text-xs text-gray-500 mt-2 text-center">
+                            Your instructor will upload materials here
+                          </p>
                         )}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-600 py-10">
-                    No materials available for this course.
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </>

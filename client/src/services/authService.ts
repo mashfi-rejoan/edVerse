@@ -4,8 +4,6 @@ import { apiUrl } from '../utils/apiBase';
 // API base path
 const API_BASE = apiUrl('/api');
 
-console.log('API URL configured as:', API_BASE);
-
 const api = axios.create({
   baseURL: API_BASE,
   headers: {
@@ -101,7 +99,6 @@ export interface AuthResponse {
 const authService = {
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
-      console.log('Attempting to register with:', { ...data, password: '***' });
       const response = await api.post('/auth/register', data);
       const { user, accessToken, refreshToken } = response.data;
       
@@ -109,17 +106,14 @@ const authService = {
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
       
-      console.log('Registration successful:', user);
       return response.data;
     } catch (error) {
-      console.error('Registration failed:', error);
       throw error;
     }
   },
 
   async login(data: LoginData): Promise<AuthResponse> {
     try {
-      console.log('Attempting to login with:', { ...data, password: '***' });
       const response = await api.post('/auth/login', data);
       const { user, accessToken, refreshToken } = response.data;
       
@@ -127,10 +121,8 @@ const authService = {
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
       
-      console.log('Login successful:', user);
       return response.data;
     } catch (error) {
-      console.error('Login failed:', error);
       throw error;
     }
   },

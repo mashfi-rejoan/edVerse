@@ -1,0 +1,79 @@
+.course-dashboard {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 32px;
+  background: #F4F4F4;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(28, 54, 76, 0.08);
+}
+.course-dashboard h2 {
+  font-size: 2.2rem;
+  margin-bottom: 24px;
+  color: #0C2B4E;
+}
+.course-dashboard h3 {
+  margin-top: 32px;
+  color: #1A3D64;
+}
+.course-table, .enrollment-table, .history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.course-table th, .enrollment-table th, .history-table th {
+  padding: 12px 8px;
+  font-weight: 600;
+  background: #1A3D64;
+  color: #fff;
+}
+.course-table td, .enrollment-table td, .history-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.add-btn, .drop-btn, .retake-btn {
+  margin-right: 8px;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #1D546C;
+  color: #fff;
+  transition: background 0.2s;
+}
+.add-btn:disabled, .drop-btn:disabled, .retake-btn:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+}
+.add-btn:hover:not(:disabled) {
+  background: #0C2B4E;
+}
+.drop-btn {
+  background: #B91C1C;
+}
+.drop-btn:hover:not(:disabled) {
+  background: #7F1D1D;
+}
+.retake-btn {
+  background: #F59E42;
+  color: #1A3D64;
+}
+.retake-btn:hover:not(:disabled) {
+  background: #D97706;
+  color: #fff;
+}
+.capacity-indicator {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.action-msg {
+  margin-bottom: 16px;
+  padding: 10px 18px;
+  background: #e0f2fe;
+  color: #0C2B4E;
+  border-radius: 8px;
+  font-weight: 500;
+}

@@ -57,24 +57,33 @@ router.get('/semesters', async (req, res) => {
 router.get('/student/:studentId/courses', async (req, res) => {
   try {
     const { studentId } = req.params;
-    const { semester, year } = req.query;
+    const { semester, year, status } = req.query;
     
     // Use current semester if not specified
     const currentSemester = getCurrentSemester();
     const querySemester = semester || currentSemester.semester;
     const queryYear = year ? parseInt(year) : currentSemester.year;
     
-    const enrollments = await Enrollment.find({
+    const query = {
       student: studentId,
-      semester: querySemester,
-      year: queryYear,
-    }).populate('course');
+    };
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status.charAt(0).toUpperCase() + status.slice(1); // Capitalize status
+    } else {
+      // If no status, filter by semester and year
+      query.semester = querySemester;
+      query.year = queryYear;
+    }
+    
+    const enrollments = await Enrollment.find(query).populate('course');
     
     const courses = enrollments.map(enrollment => ({
       ...enrollment.course.toObject(),
       enrollmentId: enrollment._id,
       enrollmentStatus: enrollment.status,
-      grade: enrollment.grade,
+      grade: enrollment.grade || '',
     }));
     
     res.json({ courses, semester: querySemester, year: queryYear });
@@ -150,6 +159,42 @@ router.post('/drop', async (req, res) => {
     }
     
     res.json({ enrollment });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Retake a course
+router.post('/retake', async (req, res) => {
+  try {
+    const { studentId, courseId, semester, year } = req.body;
+    
+    // Check if already enrolled in this course for the target semester
+    const existing = await Enrollment.findOne({
+      student: studentId,
+      course: courseId,
+      semester,
+      year,
+    });
+    
+    if (existing) {
+      return res.status(400).json({ error: 'Already enrolled in this course for the selected semester' });
+    }
+    
+    // Create new enrollment with Retake status
+    const enrollment = new Enrollment({
+      student: studentId,
+      course: courseId,
+      semester,
+      year,
+      status: 'Retake',
+      enrolledAt: new Date()
+    });
+    
+    await enrollment.save();
+    await enrollment.populate('course');
+    
+    res.status(201).json({ enrollment });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

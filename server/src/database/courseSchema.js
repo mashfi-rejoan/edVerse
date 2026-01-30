@@ -39,7 +39,7 @@ const enrollmentSchema = new mongoose.Schema({
   grade: { type: String, enum: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F', 'W', 'I', 'P', ''], default: '' },
   status: { 
     type: String, 
-    enum: ['Enrolled', 'Dropped', 'Completed'], 
+    enum: ['Enrolled', 'Dropped', 'Completed', 'Retake'], 
     default: 'Enrolled' 
   },
   enrolledAt: { type: Date, default: Date.now },

@@ -9,47 +9,74 @@ interface AttendanceRecord {
   attended: number;
   percentage: number;
   status: 'Good' | 'Warning' | 'Critical';
+  semester: string;
+  year: number;
 }
 
 const Attendance = () => {
+  const [selectedSemester, setSelectedSemester] = useState('Spring 2026');
   const [attendanceRecords] = useState<AttendanceRecord[]>([
     {
-      course: 'Data Structures',
-      courseCode: 'CS201',
+      course: 'Software Development II',
+      courseCode: 'CSE200',
+      totalClasses: 40,
+      attended: 38,
+      percentage: 95,
+      status: 'Good',
+      semester: 'Spring',
+      year: 2026
+    },
+    {
+      course: 'Principles of Economics',
+      courseCode: 'ECO201',
       totalClasses: 36,
-      attended: 33,
-      percentage: 92,
-      status: 'Good'
+      attended: 32,
+      percentage: 89,
+      status: 'Good',
+      semester: 'Spring',
+      year: 2026
     },
     {
       course: 'Database Systems',
-      courseCode: 'CS210',
-      totalClasses: 32,
-      attended: 28,
-      percentage: 88,
-      status: 'Good'
+      courseCode: 'CSE207',
+      totalClasses: 38,
+      attended: 29,
+      percentage: 76,
+      status: 'Warning',
+      semester: 'Spring',
+      year: 2026
     },
     {
-      course: 'Computer Networks',
-      courseCode: 'CS230',
-      totalClasses: 30,
-      attended: 25,
-      percentage: 84,
-      status: 'Warning'
+      course: 'Database Systems Lab',
+      courseCode: 'CSE208',
+      totalClasses: 20,
+      attended: 13,
+      percentage: 65,
+      status: 'Critical',
+      semester: 'Spring',
+      year: 2026
     },
     {
-      course: 'Operating Systems',
-      courseCode: 'CS240',
-      totalClasses: 28,
-      attended: 24,
+      course: 'Digital Logic Design',
+      courseCode: 'CSE205',
+      totalClasses: 35,
+      attended: 30,
       percentage: 86,
-      status: 'Good'
+      status: 'Good',
+      semester: 'Spring',
+      year: 2026
     }
-  ]);
+  ].sort((a, b) => a.courseCode.localeCompare(b.courseCode)));
 
-  const overallAttendance = Math.round(
-    attendanceRecords.reduce((sum, r) => sum + r.percentage, 0) / attendanceRecords.length
+  const filteredRecords = attendanceRecords.filter(
+    record => `${record.semester} ${record.year}` === selectedSemester
   );
+
+  const overallAttendance = filteredRecords.length > 0
+    ? Math.round(
+        filteredRecords.reduce((sum, r) => sum + r.percentage, 0) / filteredRecords.length
+      )
+    : 0;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -82,6 +109,18 @@ const Attendance = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Attendance Record</h1>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Semester:</label>
+            <select
+              value={selectedSemester}
+              onChange={(e) => setSelectedSemester(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0C2B4E] focus:border-transparent"
+            >
+              <option value="Spring 2026">Spring 2026</option>
+              <option value="Fall 2025">Fall 2025</option>
+              <option value="Spring 2025">Spring 2025</option>
+            </select>
+          </div>
         </div>
 
         {/* Overall Statistics */}
@@ -106,7 +145,7 @@ const Attendance = () => {
               <div>
                 <p className="text-sm text-gray-600">Good Status</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {attendanceRecords.filter(r => r.status === 'Good').length}
+                  {filteredRecords.filter(r => r.status === 'Good').length}
                 </p>
               </div>
             </div>
@@ -120,7 +159,7 @@ const Attendance = () => {
               <div>
                 <p className="text-sm text-gray-600">Warnings</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {attendanceRecords.filter(r => r.status === 'Warning').length}
+                  {filteredRecords.filter(r => r.status === 'Warning').length}
                 </p>
               </div>
             </div>
@@ -134,7 +173,7 @@ const Attendance = () => {
               <div>
                 <p className="text-sm text-gray-600">Critical</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {attendanceRecords.filter(r => r.status === 'Critical').length}
+                  {filteredRecords.filter(r => r.status === 'Critical').length}
                 </p>
               </div>
             </div>
@@ -171,7 +210,7 @@ const Attendance = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {attendanceRecords.map((record) => (
+                {filteredRecords.map((record) => (
                   <tr key={record.courseCode} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{record.course}</div>
@@ -191,9 +230,9 @@ const Attendance = () => {
                         <div className="w-16 bg-gray-200 rounded-full h-1.5">
                           <div
                             className={`h-1.5 rounded-full ${
-                              record.percentage >= 90
+                              record.percentage >= 80
                                 ? 'bg-green-600'
-                                : record.percentage >= 80
+                                : record.percentage >= 60
                                 ? 'bg-yellow-600'
                                 : 'bg-red-600'
                             }`}
@@ -223,15 +262,15 @@ const Attendance = () => {
           <ul className="space-y-2 text-sm text-blue-800">
             <li className="flex items-start gap-2">
               <CheckCircle size={16} className="mt-0.5 flex-shrink-0" />
-              <span><strong>90% or above:</strong> Good standing - Keep it up!</span>
+              <span><strong>80% or above:</strong> Good standing - Keep it up!</span>
             </li>
             <li className="flex items-start gap-2">
               <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
-              <span><strong>80-89%:</strong> Warning - Improve attendance to avoid penalties</span>
+              <span><strong>70-80%:</strong> Warning - Improve attendance to avoid penalties</span>
             </li>
             <li className="flex items-start gap-2">
               <XCircle size={16} className="mt-0.5 flex-shrink-0" />
-              <span><strong>Below 80%:</strong> Critical - Risk of not being allowed to sit for exams</span>
+              <span><strong>Below 60%:</strong> Critical - Risk of not being allowed to sit for exams</span>
             </li>
           </ul>
         </div>

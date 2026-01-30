@@ -29,6 +29,7 @@ router.get('/available/:bloodType', async (req, res) => {
     const donors = await BloodDonation.find({
       bloodType: req.params.bloodType,
       status: 'Available',
+      isAvailable: true,
     });
     res.status(200).json(donors);
   } catch (error) {
@@ -41,6 +42,21 @@ router.patch('/:id', async (req, res) => {
   try {
     const donation = await BloodDonation.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json(donation);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Toggle donor availability
+router.patch('/:id/availability', async (req, res) => {
+  try {
+    const donor = await BloodDonation.findById(req.params.id);
+    if (!donor) {
+      return res.status(404).json({ error: 'Donor not found' });
+    }
+    donor.isAvailable = !donor.isAvailable;
+    await donor.save();
+    res.status(200).json(donor);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

@@ -6,14 +6,24 @@ const mongoose = require('mongoose');
 const complaintSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
-  status: { type: String, enum: ['Pending', 'Resolved'], default: 'Pending' },
+  category: { 
+    type: String, 
+    enum: ['Academic', 'Facility', 'Faculty', 'Administration', 'Technical', 'Harassment', 'Other'], 
+    default: 'Other'
+  },
+  status: { type: String, enum: ['Pending', 'Resolved', 'Withdrawn'], default: 'Pending' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  withdrawnAt: { type: Date },
   createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 // Add middleware to handle timestamps
 complaintSchema.pre('save', function(next) {
-  this.createdAt = new Date();
+  if (this.isNew) {
+    this.createdAt = new Date();
+  }
+  this.updatedAt = new Date();
   next();
 });
 

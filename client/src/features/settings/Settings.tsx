@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import authService from '../../services/authService';
-import { User, Mail, Phone, Lock, Bell, Eye } from 'lucide-react';
+import { User, Mail, Phone, Lock } from 'lucide-react';
 
 const Settings = () => {
   const user = authService.getCurrentUser();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(
+    localStorage.getItem('studentProfilePhoto')
+  );
   
   const [profile, setProfile] = useState({
     name: user?.name || '',
@@ -14,14 +18,6 @@ const Settings = () => {
     department: 'Computer Science',
     semester: '6th',
     batch: '2022-2026'
-  });
-
-  const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    assignmentReminders: true,
-    gradeUpdates: true,
-    attendanceAlerts: true,
-    announcementNotifications: true
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -45,8 +41,18 @@ const Settings = () => {
     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
-  const handleNotificationToggle = (key: keyof typeof notifications) => {
-    setNotifications({ ...notifications, [key]: !notifications[key] });
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      localStorage.setItem('studentProfilePhoto', dataUrl);
+      setProfilePhoto(dataUrl);
+      window.dispatchEvent(new Event('profilePhotoUpdated'));
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -62,6 +68,38 @@ const Settings = () => {
             <User size={20} />
             Profile Information
           </h2>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 rounded-full border border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center">
+              {profilePhoto ? (
+                <img
+                  src={profilePhoto}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-lg font-semibold text-gray-500">
+                  {profile.name?.charAt(0) || 'S'}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-gray-600">Upload student photo</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 bg-[#0C2B4E] text-white rounded-lg hover:bg-[#1A3D64] text-sm font-medium"
+              >
+                Upload Photo
+              </button>
+            </div>
+          </div>
           <form onSubmit={handleProfileUpdate} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -210,72 +248,6 @@ const Settings = () => {
           </form>
         </div>
 
-        {/* Notification Preferences */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Bell size={20} />
-            Notification Preferences
-          </h2>
-          <div className="space-y-4">
-            {Object.entries(notifications).map(([key, value]) => (
-              <div key={key} className="flex items-center justify-between py-2">
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {key === 'emailNotifications' && 'Receive notifications via email'}
-                    {key === 'assignmentReminders' && 'Get reminders for upcoming assignments'}
-                    {key === 'gradeUpdates' && 'Notify when grades are posted'}
-                    {key === 'attendanceAlerts' && 'Alert when attendance falls below threshold'}
-                    {key === 'announcementNotifications' && 'Get notified about new announcements'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleNotificationToggle(key as keyof typeof notifications)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-                    value ? 'bg-blue-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                      value ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Privacy Settings */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Eye size={20} />
-            Privacy Settings
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <p className="font-medium text-gray-900">Profile Visibility</p>
-                <p className="text-sm text-gray-600">Allow other students to view your profile</p>
-              </div>
-              <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600">
-                <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <p className="font-medium text-gray-900">Show Grades</p>
-                <p className="text-sm text-gray-600">Display your grades on your profile</p>
-              </div>
-              <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300">
-                <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-1" />
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </DashboardLayout>
   );

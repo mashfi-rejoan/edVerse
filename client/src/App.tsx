@@ -9,6 +9,7 @@ import AdminDashboard from './features/dashboards/AdminDashboard';
 import ModeratorDashboard from './components/ModeratorDashboard';
 import CafeteriaManagerDashboard from './components/CafeteriaManagerDashboard';
 import LibrarianDashboard from './components/LibrarianDashboard';
+import CourseManagement from './features/courses/CourseManagement';
 import Courses from './features/courses/Courses';
 import Attendance from './features/attendance/Attendance';
 import Grades from './features/grades/Grades';
@@ -39,6 +40,15 @@ const App = () => {
 
         <Route
           path="/student/courses"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <CourseManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/my-courses"
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <Courses />

@@ -72,7 +72,6 @@ const Register = () => {
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
-      console.error('Registration error details:', err);
       setError(errorMessage);
     } finally {
       setLoading(false);
