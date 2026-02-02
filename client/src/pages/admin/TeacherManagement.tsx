@@ -204,8 +204,8 @@ const TeacherManagement: React.FC = () => {
     { 
       label: 'Toggle Status', 
       onClick: handleToggleStatus, 
-      color: 'purple' as const, 
-      icon: (teacher: any) => teacher.status === 'Active' ? <UserX size={18} /> : <UserCheck size={18} />
+      color: 'blue' as const, 
+      icon: <UserCheck size={18} />
     },
     { label: 'Delete', onClick: handleDeleteTeacher, color: 'red' as const, icon: <Trash2 size={18} /> }
   ];

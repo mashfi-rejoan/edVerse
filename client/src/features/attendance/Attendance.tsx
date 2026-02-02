@@ -22,7 +22,7 @@ const Attendance = () => {
       totalClasses: 40,
       attended: 38,
       percentage: 95,
-      status: 'Good',
+      status: 'Good' as const,
       semester: 'Spring',
       year: 2026
     },
@@ -32,7 +32,7 @@ const Attendance = () => {
       totalClasses: 36,
       attended: 32,
       percentage: 89,
-      status: 'Good',
+      status: 'Good' as const,
       semester: 'Spring',
       year: 2026
     },
@@ -42,7 +42,7 @@ const Attendance = () => {
       totalClasses: 38,
       attended: 29,
       percentage: 76,
-      status: 'Warning',
+      status: 'Warning' as const,
       semester: 'Spring',
       year: 2026
     },
@@ -52,7 +52,7 @@ const Attendance = () => {
       totalClasses: 20,
       attended: 13,
       percentage: 65,
-      status: 'Critical',
+      status: 'Critical' as const,
       semester: 'Spring',
       year: 2026
     },
@@ -62,7 +62,7 @@ const Attendance = () => {
       totalClasses: 35,
       attended: 30,
       percentage: 86,
-      status: 'Good',
+      status: 'Good' as const,
       semester: 'Spring',
       year: 2026
     }

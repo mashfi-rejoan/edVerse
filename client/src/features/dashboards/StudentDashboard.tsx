@@ -133,7 +133,7 @@ const StudentDashboard = () => {
               </div>
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
                 <Target className="w-5 h-5" />
-                <span className="font-semibold">Student ID: {user?.studentId || '2024510183'}</span>
+                <span className="font-semibold">Student ID: 2024510183</span>
               </div>
             </div>
           </div>
