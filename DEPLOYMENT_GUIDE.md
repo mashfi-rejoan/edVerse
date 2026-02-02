@@ -112,16 +112,27 @@ Or use Vercel Dashboard automatic deployments from GitHub.
 
 ---
 
-## 🔗 API Integration
+## 🔗 MongoDB Connection
 
-### Frontend API Configuration
-File: `client/src/services/adminService.ts`
+### ✅ MongoDB Already Integrated
 
-```typescript
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+The project already has MongoDB configured and ready to use:
+- Connection logic: `server/src/config/database.ts`
+- Mongoose ORM properly configured
+- Auto-reconnection implemented
+- Error handling in place
 
-// All API calls use VITE_API_URL environment variable
-```
+### Quick Setup for Deployment
+
+📖 **Full MongoDB Setup Guide:** See [MONGODB_SETUP.md](./MONGODB_SETUP.md)
+
+**Quick Steps:**
+1. Create account at [mongodb.com/cloud/atlas](https://mongodb.com/cloud/atlas)
+2. Create M0 (Free) cluster
+3. Add database user with strong password
+4. Whitelist IP: `0.0.0.0/0` (development) or your IP (production)
+5. Get connection string: `mongodb+srv://user:pass@cluster.mongodb.net/edverse`
+6. Use this in environment variables (Step below)
 
 ### CORS Settings
 Backend automatically configured for:

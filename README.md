@@ -187,6 +187,7 @@ npm run lint --workspaces
 - 📖 **Quick Start (15 min):** [DEPLOYMENT_QUICKSTART.md](./DEPLOYMENT_QUICKSTART.md)
 - 📚 **Full Guide:** [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
 - 🏗️ **Architecture:** [ADMIN_ARCHITECTURE.md](./ADMIN_ARCHITECTURE.md)
+- 🗄️ **MongoDB Setup:** [MONGODB_SETUP.md](./MONGODB_SETUP.md)
 
 ### Live URLs (After Deployment)
 ```

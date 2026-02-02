@@ -86,14 +86,20 @@ Admin Panel: https://edverse.vercel.app/admin
 
 ### STEP 1: Setup MongoDB Atlas (5 minutes)
 
+✅ **MongoDB is already configured in the project!**
+
+Quick setup steps:
 1. Go to [mongodb.com/cloud/atlas](https://mongodb.com/cloud/atlas)
-2. Create Free Account
-3. Create Free Cluster
-4. Get Connection String:
-   ```
-   mongodb+srv://username:password@cluster.mongodb.net/edverse
-   ```
-5. Copy this for later use
+2. Create Free Account → Create Free Cluster
+3. Add Database User: username & password
+4. Whitelist IP: `0.0.0.0/0` (for development)
+5. Get Connection String: `mongodb+srv://user:pass@cluster.mongodb.net/edverse`
+
+📖 **Detailed Guide:** See [MONGODB_SETUP.md](./MONGODB_SETUP.md)
+
+⚡ **TL;DR for deployment:**
+- Get your MongoDB connection string
+- Keep it safe for Step 2
 
 ---
 
