@@ -151,7 +151,14 @@ const authService = {
 
   getCurrentUser(): User | null {
     const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr) as User;
+    } catch (error) {
+      console.error('Invalid user data in storage:', error);
+      localStorage.removeItem('user');
+      return null;
+    }
   },
 
   getAccessToken(): string | null {

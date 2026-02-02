@@ -71,11 +71,14 @@ const Complaints = () => {
 
       if (response.ok) {
         const newComplaint = await response.json();
-        setComplaints([newComplaint, ...complaints]);
+        // Ensure state is properly updated with new complaint
+        setComplaints(prevComplaints => [newComplaint, ...prevComplaints]);
         setTitle('');
         setDescription('');
         setCategory('Academic');
         alert('Complaint submitted successfully!');
+      } else {
+        throw new Error('Failed to submit complaint');
       }
     } catch (error) {
       console.error('Error submitting complaint:', error);
@@ -95,8 +98,9 @@ const Complaints = () => {
       });
 
       if (response.ok) {
-        setComplaints(
-          complaints.map((c) =>
+        // Use functional update to ensure latest state
+        setComplaints(prevComplaints =>
+          prevComplaints.map((c) =>
             c._id === complaintId ? { ...c, status: 'Withdrawn', withdrawnAt: new Date().toISOString() } : c
           )
         );

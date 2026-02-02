@@ -134,7 +134,7 @@ const mockBooks: LibraryBook[] = [
 ];
 
 const Library = () => {
-  const [books, setBooks] = useState<LibraryBook[]>(mockBooks);
+  const [books, setBooks] = useState<LibraryBook[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -150,12 +150,20 @@ const Library = () => {
       const response = await fetch(apiUrl('/api/shared/library'));
       if (response.ok) {
         const data = await response.json();
-        if (data && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
           setBooks(data);
+        } else {
+          // Fallback to mock data if API returns empty
+          setBooks(mockBooks);
         }
+      } else {
+        // Fallback to mock data if API fails
+        setBooks(mockBooks);
       }
     } catch (error) {
       console.error('Error fetching books:', error);
+      // Fallback to mock data on error
+      setBooks(mockBooks);
     } finally {
       setLoading(false);
     }

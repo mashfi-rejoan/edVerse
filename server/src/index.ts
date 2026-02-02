@@ -49,6 +49,9 @@ const analyticsRoutes = require('./routes/analytics.js');
 const moderationRoutes = require('./routes/moderation.js');
 const googleClassroomRoutes = require('./routes/googleClassroom.js');
 const courseRoutes = require('./routes/courses.js');
+const marksRoutes = require('./routes/marks.js');
+const classroomRoutes = require('./routes/classroom.js');
+const roomBookingRoutes = require('./routes/roomBooking.js');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -61,6 +64,9 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/moderation', moderationRoutes);
 app.use('/api/google-classroom', googleClassroomRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/marks', marksRoutes);
+app.use('/api/classroom', classroomRoutes);
+app.use('/api/room-booking', roomBookingRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });

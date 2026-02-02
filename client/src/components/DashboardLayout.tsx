@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import authService, { User } from '../services/authService';
-import { LogOut, Bell, Home, BookOpen, CalendarDays, BarChart3, ClipboardList, Library, MessageSquare, HeartPulse, Settings } from 'lucide-react';
+import { LogOut, Bell, Home, BookOpen, CalendarDays, BarChart3, ClipboardList, Library, MessageSquare, HeartPulse, Settings, Trophy, UtensilsCrossed, UserCircle } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -16,6 +16,7 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
   const [eventsOpen, setEventsOpen] = useState(false);
   const eventsRef = useRef<HTMLDivElement | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const upcomingEvents = [
     { title: 'Spring Cultural Night', date: 'Feb 08, 2026', type: 'Cultural Program' },
@@ -53,16 +54,16 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
 
   const navItems = [
     { label: 'Dashboard', href: '/student', icon: <Home size={16} /> },
-    { label: 'Courses', href: '/student/my-courses', icon: <BookOpen size={16} /> },
     { label: 'Registration', href: '/student/courses', icon: <BookOpen size={16} /> },
-    { label: 'Attendance', href: '/student/attendance', icon: <CalendarDays size={16} /> },
-    { label: 'Grades', href: '/student/grades', icon: <BarChart3 size={16} /> },
-    { label: 'Timetable', href: '/student/timetable', icon: <CalendarDays size={16} /> },
+    { label: 'Courses', href: '/student/my-courses', icon: <BookOpen size={16} /> },
+    { label: 'Routine', href: '/student/timetable', icon: <CalendarDays size={16} /> },
+    { label: 'Attendance', href: '/student/attendance', icon: <BarChart3 size={16} /> },
     { label: 'Assignments', href: '/student/assignments', icon: <ClipboardList size={16} /> },
+    { label: 'Achieve', href: '/student/achieve', icon: <Trophy size={16} /> },
     { label: 'Library', href: '/student/library', icon: <Library size={16} /> },
-    { label: 'Complaints', href: '/student/complaints', icon: <MessageSquare size={16} /> },
+    { label: 'Cafeteria', href: '/student/cafeteria', icon: <UtensilsCrossed size={16} /> },
     { label: 'Blood Donation', href: '/student/blood', icon: <HeartPulse size={16} /> },
-    { label: 'Settings', href: '/student/settings', icon: <Settings size={16} /> }
+    { label: 'Complaints', href: '/student/complaints', icon: <MessageSquare size={16} /> }
   ];
 
   return (
@@ -107,13 +108,29 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
         </div>
 
         <div className="px-4 py-4 border-t border-white/10 bg-[#070738] mt-auto">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/75 hover:bg-white/10 hover:text-white transition w-full"
-          >
-            <LogOut size={18} />
-            <span className="text-sm">Logout</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/student/profile')}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-white/75 hover:bg-white/10 hover:text-white transition"
+              title="Profile"
+            >
+              <UserCircle size={18} />
+            </button>
+            <button
+              onClick={() => navigate('/student/settings')}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-white/75 hover:bg-white/10 hover:text-white transition"
+              title="Settings"
+            >
+              <Settings size={18} />
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-white/75 hover:bg-white/10 hover:text-white transition"
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
         </div>
       </aside>
 

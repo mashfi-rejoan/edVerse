@@ -160,7 +160,7 @@ const mockDonors: BloodDonation[] = [
 ];
 
 const BloodDonation = () => {
-  const [donors, setDonors] = useState<BloodDonation[]>(mockDonors);
+  const [donors, setDonors] = useState<BloodDonation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBloodType, setSelectedBloodType] = useState('All');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -198,14 +198,20 @@ const BloodDonation = () => {
       const response = await fetch(apiUrl('/api/blood-donation'));
       if (response.ok) {
         const data = await response.json();
-        if (data && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
           setDonors(data);
+        } else {
+          // Fallback to mock data if API returns empty
+          setDonors(mockDonors);
         }
-        // If empty response, keep mock data
+      } else {
+        // Fallback to mock data if API fails
+        setDonors(mockDonors);
       }
     } catch (error) {
       console.error('Error fetching donors:', error);
-      // Keep mock data on error
+      // Fallback to mock data on error
+      setDonors(mockDonors);
     } finally {
       setLoading(false);
     }

@@ -1,23 +1,22 @@
 import { useRef, useState } from 'react';
-import DashboardLayout from '../../components/DashboardLayout';
+import TeacherDashboardLayout from '../../components/TeacherDashboardLayout';
 import authService from '../../services/authService';
 import { User, Mail, Phone, Lock } from 'lucide-react';
 
-const Settings = () => {
+const TeacherSettings = () => {
   const user = authService.getCurrentUser();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(
-    localStorage.getItem('studentProfilePhoto')
+    localStorage.getItem('teacherProfilePhoto')
   );
   
   const [profile, setProfile] = useState({
     name: user?.name || '',
     email: user?.email || '',
     phone: '',
-    universityId: user?.universityId || '',
+    teacherId: user?.id || '',
     department: 'Computer Science',
-    semester: '6th',
-    batch: '2022-2026'
+    designation: 'Assistant Professor'
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -36,7 +35,7 @@ const Settings = () => {
     
     try {
       // Save profile data to localStorage
-      localStorage.setItem('studentProfile', JSON.stringify(profile));
+      localStorage.setItem('teacherProfile', JSON.stringify(profile));
       setSuccessMessage('Profile updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
@@ -63,7 +62,7 @@ const Settings = () => {
       // In production, this would call an API
       // For now, we'll save a hashed version to localStorage
       const passwordHash = btoa(passwordData.newPassword); // Simple encoding for demo
-      localStorage.setItem('studentPasswordHash', passwordHash);
+      localStorage.setItem('teacherPasswordHash', passwordHash);
       
       setSuccessMessage('Password changed successfully!');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -94,7 +93,7 @@ const Settings = () => {
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
-      localStorage.setItem('studentProfilePhoto', dataUrl);
+      localStorage.setItem('teacherProfilePhoto', dataUrl);
       setProfilePhoto(dataUrl);
       window.dispatchEvent(new Event('profilePhotoUpdated'));
       setSuccessMessage('Profile photo updated successfully!');
@@ -108,7 +107,7 @@ const Settings = () => {
   };
 
   return (
-    <DashboardLayout title="Settings">
+    <TeacherDashboardLayout title="Settings">
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
@@ -144,12 +143,12 @@ const Settings = () => {
                 />
               ) : (
                 <span className="text-lg font-semibold text-gray-500">
-                  {profile.name?.charAt(0) || 'S'}
+                  {profile.name?.charAt(0) || 'T'}
                 </span>
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-gray-600">Upload student photo</p>
+              <p className="text-sm text-gray-600">Upload profile photo</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -182,11 +181,11 @@ const Settings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  University ID
+                  Teacher ID
                 </label>
                 <input
                   type="text"
-                  value={profile.universityId}
+                  value={profile.teacherId}
                   disabled
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                 />
@@ -202,7 +201,7 @@ const Settings = () => {
                     type="email"
                     value={profile.email}
                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0C2B4E] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -218,7 +217,7 @@ const Settings = () => {
                     value={profile.phone}
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                     placeholder="+1 (555) 123-4567"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0C2B4E] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -237,11 +236,11 @@ const Settings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Semester
+                  Designation
                 </label>
                 <input
                   type="text"
-                  value={profile.semester}
+                  value={profile.designation}
                   disabled
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                 />
@@ -250,7 +249,7 @@ const Settings = () => {
 
             <button
               type="submit"
-              className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              className="w-full sm:w-auto px-6 py-2 bg-[#0C2B4E] text-white rounded-lg hover:bg-[#1A3D64] font-medium"
             >
               Update Profile
             </button>
@@ -272,7 +271,7 @@ const Settings = () => {
                 type="password"
                 value={passwordData.currentPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0C2B4E] focus:border-transparent"
                 required
               />
             </div>
@@ -286,7 +285,7 @@ const Settings = () => {
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0C2B4E] focus:border-transparent"
                   required
                 />
               </div>
@@ -299,7 +298,7 @@ const Settings = () => {
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0C2B4E] focus:border-transparent"
                   required
                 />
               </div>
@@ -307,7 +306,7 @@ const Settings = () => {
 
             <button
               type="submit"
-              className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              className="w-full sm:w-auto px-6 py-2 bg-[#0C2B4E] text-white rounded-lg hover:bg-[#1A3D64] font-medium"
             >
               Change Password
             </button>
@@ -315,8 +314,8 @@ const Settings = () => {
         </div>
 
       </div>
-    </DashboardLayout>
+    </TeacherDashboardLayout>
   );
 };
 
-export default Settings;
+export default TeacherSettings;
