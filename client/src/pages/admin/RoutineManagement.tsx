@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import AdminModal from '../../components/AdminModal';
-import { Calendar, Plus, Upload, Download, Printer, AlertTriangle, Clock, MapPin } from 'lucide-react';
+import { Calendar, CalendarDays, Plus, Upload, Download, Printer, AlertTriangle, Clock, MapPin } from 'lucide-react';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const ROOMS = ['201', '202', '204', '301', 'Lab-1'];
@@ -286,7 +286,7 @@ const RoutineManagement: React.FC = () => {
         <PageHeader
           title="Routine Management"
           subtitle="Manage weekly schedules, detect conflicts, and export reports"
-          icon={<Calendar size={24} className="text-white" />}
+          icon={<CalendarDays size={24} className="text-white" />}
           action={{
             label: 'Add Class',
             onClick: () => handleOpenForm(),

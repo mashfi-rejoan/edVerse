@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import { CalendarDays, CalendarCheck, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import PageHeader from '../../components/PageHeader';
 import authService from '../../services/authService';
 import { apiUrl } from '../../utils/apiBase';
@@ -217,7 +217,7 @@ const EventCalendar = () => {
         <PageHeader
           title="Calendar"
           subtitle="Manage campus-wide events and deadlines"
-          icon={<CalendarDays size={24} className="text-white" />}
+          icon={<CalendarCheck size={24} className="text-white" />}
         />
 
         <div className="grid grid-cols-1 xl:grid-cols-[2fr,1fr] gap-6">

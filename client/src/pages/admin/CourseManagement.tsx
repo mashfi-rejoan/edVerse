@@ -11,7 +11,8 @@ import {
   RotateCcw,
   Calendar,
   Layers,
-  Users
+  Users,
+  BookOpen
 } from 'lucide-react';
 import adminService from '../../services/adminService';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -364,7 +365,7 @@ const CourseManagement: React.FC = () => {
             },
             variant: 'primary'
           }}
-          icon={<Plus size={24} className="text-white" />}
+          icon={<BookOpen size={24} className="text-white" />}
         />
 
         <div className="mt-6 flex flex-wrap gap-3">

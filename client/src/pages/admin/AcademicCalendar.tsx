@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import AdminModal from '../../components/AdminModal';
-import { CalendarDays, Plus, Trash2, Copy, CheckCircle, Edit } from 'lucide-react';
+import { CalendarDays, CalendarRange, Plus, Trash2, Copy, CheckCircle, Edit } from 'lucide-react';
 
 interface Holiday {
   id: string;
@@ -187,7 +187,7 @@ const AcademicCalendar: React.FC = () => {
         <PageHeader
           title="Academic Calendar"
           subtitle="Configure semester dates, holidays, and deadlines"
-          icon={<CalendarDays size={24} className="text-white" />}
+          icon={<CalendarRange size={24} className="text-white" />}
           action={{
             label: 'Clone Previous',
             onClick: () => setShowCloneModal(true),

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import AdminModal from '../../components/AdminModal';
-import { Eye, Users, UserPlus, Edit, AlertTriangle } from 'lucide-react';
+import { Eye, Users, UserPlus, Edit, AlertTriangle, Layers } from 'lucide-react';
 
 interface SectionRecord {
   id: string;
@@ -185,7 +185,7 @@ const SectionManagement: React.FC = () => {
         <PageHeader
           title="Section Management"
           subtitle="Assign teachers, manage capacity, and view enrollments"
-          icon={<Users size={24} className="text-white" />}
+          icon={<Layers size={24} className="text-white" />}
         />
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">

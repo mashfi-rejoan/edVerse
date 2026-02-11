@@ -3,7 +3,7 @@ import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import AdminModal from '../../components/AdminModal';
 import AdminForm, { FormField } from '../../components/AdminForm';
-import { Megaphone, Plus, Edit, Eye, Send, Archive, Calendar } from 'lucide-react';
+import { Megaphone, Bell, Plus, Edit, Eye, Send, Archive, Calendar } from 'lucide-react';
 
 interface AnnouncementRecord {
   id: string;
@@ -186,7 +186,7 @@ const AnnouncementManagement: React.FC = () => {
         <PageHeader
           title="Announcements"
           subtitle="Create, publish, and archive campus announcements"
-          icon={<Megaphone size={24} className="text-white" />}
+          icon={<Bell size={24} className="text-white" />}
           action={{
             label: 'Create Announcement',
             onClick: () => {

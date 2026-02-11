@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import AdminModal from '../../components/AdminModal';
-import { FileDown, Eye, CheckCircle, XCircle, Filter } from 'lucide-react';
+import { FileDown, Eye, CheckCircle, XCircle, Filter, ClipboardCheck } from 'lucide-react';
 
 interface RegistrationRequest {
   id: string;
@@ -110,7 +110,7 @@ const RegistrationOversight: React.FC = () => {
         <PageHeader
           title="Registration Oversight"
           subtitle="Review add/drop requests and export registration data"
-          icon={<Filter size={24} className="text-white" />}
+          icon={<ClipboardCheck size={24} className="text-white" />}
           action={{
             label: 'Export CSV',
             onClick: () => alert('CSV export will be available in next iteration.'),
