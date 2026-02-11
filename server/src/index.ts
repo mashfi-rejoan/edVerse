@@ -5,6 +5,9 @@ import cookieParser from 'cookie-parser';
 import connectDB from './config/database';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
+import teacherRoutes from './routes/teacher';
+import studentRoutes from './routes/student';
+import bloodDonorRoutes from './routes/bloodDonor';
 // Import shared modules routes
 const sharedModulesRoutes = require('./routes/sharedModules.js');
 // Import database schemas
@@ -58,6 +61,9 @@ const calendarRoutes = require('./routes/calendar.js');
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/blood-donor', bloodDonorRoutes);
 app.use('/api/shared', sharedModulesRoutes);
 app.use('/api/blood-donation', bloodDonationRoutes);
 app.use('/api/cafeteria', cafeteriaRoutes);

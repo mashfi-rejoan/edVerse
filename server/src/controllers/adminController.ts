@@ -4,6 +4,8 @@ import Teacher from '../models/Teacher';
 import Course from '../models/Course';
 import Section from '../models/Section';
 import Enrollment from '../models/Enrollment';
+import Exam from '../models/Exam';
+import Announcement from '../models/Announcement';
 import User from '../models/User';
 import bcryptjs from 'bcryptjs';
 import { AuthRequest } from '../middleware/auth';
@@ -609,16 +611,24 @@ export const getExams = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
 
-    // For now, return empty array as Exam model will be created later
+    const exams = await Exam.find()
+      .populate('createdBy', 'name email')
+      .populate('assignedTeacher', 'universityId name')
+      .sort({ date: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Exam.countDocuments();
+
     res.status(200).json({
       success: true,
       data: {
-        exams: [],
+        exams,
         pagination: {
           page,
           limit,
-          total: 0,
-          totalPages: 0
+          total,
+          totalPages: Math.ceil(total / limit)
         }
       }
     });
@@ -630,12 +640,17 @@ export const getExams = async (req: Request, res: Response) => {
   }
 };
 
-export const createExam = async (req: Request, res: Response) => {
+export const createExam = async (req: AuthRequest, res: Response) => {
   try {
-    // Placeholder - will implement after creating Exam model
-    res.status(501).json({
-      success: false,
-      error: 'Exam creation not implemented yet'
+    const exam = await Exam.create({
+      ...req.body,
+      createdBy: req.user?._id
+    });
+
+    res.status(201).json({
+      success: true,
+      data: exam,
+      message: 'Exam created successfully'
     });
   } catch (error: any) {
     res.status(500).json({
@@ -647,10 +662,23 @@ export const createExam = async (req: Request, res: Response) => {
 
 export const updateExam = async (req: Request, res: Response) => {
   try {
-    // Placeholder - will implement after creating Exam model
-    res.status(501).json({
-      success: false,
-      error: 'Exam update not implemented yet'
+    const exam = await Exam.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'name email');
+
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        error: 'Exam not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: exam,
+      message: 'Exam updated successfully'
     });
   } catch (error: any) {
     res.status(500).json({
@@ -667,16 +695,23 @@ export const getAnnouncements = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
 
-    // Placeholder - will implement after creating Announcement model
+    const announcements = await Announcement.find()
+      .populate('createdBy', 'name email')
+      .sort({ publishedDate: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Announcement.countDocuments();
+
     res.status(200).json({
       success: true,
       data: {
-        announcements: [],
+        announcements,
         pagination: {
           page,
           limit,
-          total: 0,
-          totalPages: 0
+          total,
+          totalPages: Math.ceil(total / limit)
         }
       }
     });
@@ -688,12 +723,17 @@ export const getAnnouncements = async (req: Request, res: Response) => {
   }
 };
 
-export const createAnnouncement = async (req: Request, res: Response) => {
+export const createAnnouncement = async (req: AuthRequest, res: Response) => {
   try {
-    // Placeholder - will implement after creating Announcement model
-    res.status(501).json({
-      success: false,
-      error: 'Announcement creation not implemented yet'
+    const announcement = await Announcement.create({
+      ...req.body,
+      createdBy: req.user?._id
+    });
+
+    res.status(201).json({
+      success: true,
+      data: announcement,
+      message: 'Announcement created successfully'
     });
   } catch (error: any) {
     res.status(500).json({
@@ -705,10 +745,23 @@ export const createAnnouncement = async (req: Request, res: Response) => {
 
 export const updateAnnouncement = async (req: Request, res: Response) => {
   try {
-    // Placeholder - will implement after creating Announcement model
-    res.status(501).json({
-      success: false,
-      error: 'Announcement update not implemented yet'
+    const announcement = await Announcement.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'name email');
+
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        error: 'Announcement not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: announcement,
+      message: 'Announcement updated successfully'
     });
   } catch (error: any) {
     res.status(500).json({
@@ -720,10 +773,22 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
 
 export const deleteAnnouncement = async (req: Request, res: Response) => {
   try {
-    // Placeholder - will implement after creating Announcement model
-    res.status(501).json({
-      success: false,
-      error: 'Announcement deletion not implemented yet'
+    const announcement = await Announcement.findById(req.params.id);
+    
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        error: 'Announcement not found'
+      });
+    }
+
+    // Soft delete - mark as archived
+    announcement.status = 'Archived';
+    await announcement.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Announcement deleted successfully'
     });
   } catch (error: any) {
     res.status(500).json({

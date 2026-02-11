@@ -10,6 +10,11 @@
     "start": "node dist/index.js",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
+    "seed": "ts-node src/seed/index.ts",
+    "seed:admins": "ts-node src/seed/seedAdmins.ts",
+    "seed:teachers": "ts-node src/seed/seedTeachers.ts",
+    "seed:students": "ts-node src/seed/seedStudents.ts",
+    "seed:courses": "ts-node src/seed/seedCourses.ts",
     "lint": "eslint . --ext .ts --max-warnings 0 || true"
   },
   "dependencies": {
