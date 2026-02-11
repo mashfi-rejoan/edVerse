@@ -4,6 +4,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/database';
 import authRoutes from './routes/auth';
+import adminRoutes from './routes/admin';
 // Import shared modules routes
 const sharedModulesRoutes = require('./routes/sharedModules.js');
 // Import database schemas
@@ -56,6 +57,7 @@ const calendarRoutes = require('./routes/calendar.js');
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/shared', sharedModulesRoutes);
 app.use('/api/blood-donation', bloodDonationRoutes);
 app.use('/api/cafeteria', cafeteriaRoutes);

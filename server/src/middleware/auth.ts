@@ -5,6 +5,7 @@ import User from '../models/User';
 export interface AuthRequest extends Request {
   userId?: string;
   userRole?: string;
+  user?: any;
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -24,6 +25,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
     req.userId = decoded.userId;
     req.userRole = user.role;
+    req.user = user;
     next();
   } catch (error) {
     res.status(401).json({ message: 'Invalid or expired token' });
@@ -37,4 +39,14 @@ export const authorize = (...roles: string[]) => {
     }
     next();
   };
+};
+
+export const authorizeAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.userRole !== 'admin') {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Admin access required' 
+    });
+  }
+  next();
 };
