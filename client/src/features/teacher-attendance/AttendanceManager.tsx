@@ -106,10 +106,7 @@ const AttendanceManager = () => {
     };
 
     try {
-      // TODO: Replace with actual API call
       // await axios.post('/api/teacher/attendance', attendanceData);
-      
-      console.log('Attendance Data:', attendanceData);
       
       setTimeout(() => {
         setIsSaving(false);

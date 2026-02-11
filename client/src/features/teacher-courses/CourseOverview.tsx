@@ -110,13 +110,10 @@ const CourseOverview = () => {
                   `http://localhost:4000/api/marks/${selectedCourse}/${section}/${evalType}`
                 );
                 const result = await response.json();
-                
-                console.log(`Fetched ${evalType} for ${selectedCourse}/${section}:`, result);
 
                 if (result.success && result.data && result.data.records) {
                   const record = result.data.records.find((r: any) => r.studentId === student.studentId);
                   if (record) {
-                    console.log(`Found ${evalType} record for ${student.studentId}:`, record);
                     if (evalType === 'ct') performance.ct = record.marksObtained;
                     else if (evalType === 'assignment') performance.assignment = record.marksObtained;
                     else if (evalType === 'mid') performance.mid = record.marksObtained;
@@ -126,13 +123,10 @@ const CourseOverview = () => {
                   // Fallback to localStorage if API returns no data
                   const storageKey = `marks_${selectedCourse}_${section}_${evalType}`;
                   const savedMarks = localStorage.getItem(storageKey);
-                  console.log(`No API data for ${evalType}, checking localStorage with key: ${storageKey}`);
                   if (savedMarks) {
-                    console.log(`Found in localStorage:`, savedMarks);
                     const savedMarksObj = JSON.parse(savedMarks);
                     const marks = savedMarksObj[student.studentId];
                     if (marks !== null && marks !== undefined) {
-                      console.log(`${evalType} marks for ${student.studentId}: ${marks}`);
                       if (evalType === 'ct') performance.ct = marks;
                       else if (evalType === 'assignment') performance.assignment = marks;
                       else if (evalType === 'mid') performance.mid = marks;
