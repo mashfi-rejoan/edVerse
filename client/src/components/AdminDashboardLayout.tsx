@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import authService, { User } from '../services/authService';
+import edVerseLogo from '../assets/edverse-wordmark.svg';
 import {
   LogOut,
   Home,
@@ -47,7 +48,8 @@ const AdminDashboardLayout = ({ children, title = 'Admin Panel' }: AdminDashboar
     { label: 'Courses', href: '/admin/courses', icon: <ClipboardList size={16} /> },
     { label: 'Sections', href: '/admin/course-sections', icon: <Zap size={16} /> },
     { label: 'Routine', href: '/admin/routine', icon: <Calendar size={16} /> },
-    { label: 'Calendar', href: '/admin/academic-calendar', icon: <Calendar size={16} /> },
+    { label: 'Academic Calendar', href: '/admin/academic-calendar', icon: <Calendar size={16} /> },
+    { label: 'Calendar', href: '/admin/calendar', icon: <Calendar size={16} /> },
     { label: 'Registration', href: '/admin/registration-settings', icon: <ClipboardList size={16} /> },
     { label: 'Registrations', href: '/admin/registrations', icon: <BarChart3 size={16} /> },
     { label: 'Exams', href: '/admin/exams', icon: <AlertCircle size={16} /> },
@@ -157,6 +159,11 @@ const AdminDashboardLayout = ({ children, title = 'Admin Panel' }: AdminDashboar
               >
                 <Menu size={24} />
               </button>
+              <img
+                src={edVerseLogo}
+                alt="edVerse"
+                className="h-10 w-auto"
+              />
               <div>
                 <h1 className="text-xl font-bold text-gray-800">{title}</h1>
                 <p className="text-xs text-gray-500 mt-0.5">CSE Department • BSc Program</p>

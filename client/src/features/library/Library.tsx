@@ -235,11 +235,16 @@ const Library = () => {
   return (
     <DashboardLayout title="Library">
       <div className="space-y-6">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Library Resources</h1>
-            <p className="text-sm text-gray-500 mt-1">Search, borrow and track your books</p>
+        <div className="bg-gradient-to-br from-[#0C2B4E] via-[#1A3D64] to-[#1D546C] rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-center gap-3">
+            <Book className="w-8 h-8" />
+            <div>
+              <h1 className="text-3xl font-bold">Library Resources</h1>
+              <p className="text-white/80 mt-1">Search, borrow and track your books</p>
+            </div>
           </div>
+        </div>
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />

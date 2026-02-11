@@ -8,11 +8,12 @@ const complaintSchema = new mongoose.Schema({
   description: { type: String, required: true },
   category: { 
     type: String, 
-    enum: ['Academic', 'Facility', 'Faculty', 'Administration', 'Technical', 'Harassment', 'Other'], 
+    enum: ['Academic', 'Facility', 'Lost and Found', 'Faculty', 'Administration', 'Technical', 'Harassment', 'Other'], 
     default: 'Other'
   },
   status: { type: String, enum: ['Pending', 'Resolved', 'Withdrawn'], default: 'Pending' },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  isAnonymous: { type: Boolean, default: false },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   withdrawnAt: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

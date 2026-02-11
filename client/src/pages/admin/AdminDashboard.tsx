@@ -6,7 +6,6 @@ import {
   Zap, MessageSquare, ClipboardCheck
 } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import AdminDashboardLayout from '../../components/AdminDashboardLayout';
 import adminService from '../../services/adminService';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
@@ -16,11 +15,11 @@ const AdminDashboard: React.FC = () => {
 
   // Mock chart data
   const enrollmentData = [
-    { section: 'Section A', students: 45 },
-    { section: 'Section B', students: 42 },
-    { section: 'Section C', students: 48 },
-    { section: 'Section D', students: 40 },
-    { section: 'Section E', students: 38 }
+    { section: 'Section 1', students: 45 },
+    { section: 'Section 2', students: 42 },
+    { section: 'Section 3', students: 48 },
+    { section: 'Section 4', students: 40 },
+    { section: 'Section 5', students: 38 }
   ];
 
   const attendanceData = [
@@ -77,13 +76,20 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner fullScreen />;
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <LoadingSpinner text="Loading dashboard..." />
+        </div>
+      </div>
+    );
+  }
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   return (
-    <AdminDashboardLayout>
-      <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen">
         {/* Welcome Section */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-1">
@@ -479,7 +485,6 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </AdminDashboardLayout>
   );
 };
 

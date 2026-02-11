@@ -3,6 +3,7 @@ import TeacherDashboardLayout from '../../components/TeacherDashboardLayout';
 import authService from '../../services/authService';
 import CreatePost from './CreatePost';
 import PostCard from './PostCard';
+import { apiUrl } from '../../utils/apiBase';
 import {
   BookOpen,
   Plus,
@@ -32,9 +33,9 @@ interface Post {
 }
 
 const mockCourses = [
-  { courseCode: 'CS201', courseName: 'Data Structures', sections: ['A', 'B'] },
-  { courseCode: 'CS210', courseName: 'Database Systems', sections: ['A'] },
-  { courseCode: 'CS301', courseName: 'Software Engineering', sections: ['A'] }
+  { courseCode: 'CS201', courseName: 'Data Structures', sections: ['1', '2'] },
+  { courseCode: 'CS210', courseName: 'Database Systems', sections: ['1'] },
+  { courseCode: 'CS301', courseName: 'Software Engineering', sections: ['1'] }
 ];
 
 const Classroom = () => {
@@ -59,7 +60,7 @@ const Classroom = () => {
         }
 
         const response = await fetch(
-          `http://localhost:4000/api/classroom/course/${selectedCourse}?${query}`
+          apiUrl(`/api/classroom/course/${selectedCourse}?${query}`)
         );
         const result = await response.json();
 

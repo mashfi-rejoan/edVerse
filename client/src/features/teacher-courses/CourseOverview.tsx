@@ -18,22 +18,22 @@ import {
 
 // Mock data
 const mockCourses = [
-  { courseCode: 'CS201', courseName: 'Data Structures', sections: ['A', 'B'] },
-  { courseCode: 'CS210', courseName: 'Database Systems', sections: ['A'] },
-  { courseCode: 'CS301', courseName: 'Software Engineering', sections: ['A'] }
+  { courseCode: 'CS201', courseName: 'Data Structures', sections: ['1', '2'] },
+  { courseCode: 'CS210', courseName: 'Database Systems', sections: ['1'] },
+  { courseCode: 'CS301', courseName: 'Software Engineering', sections: ['1'] }
 ];
 
 const mockStudents = [
-  { studentId: '2024510183', name: 'Mashfi Rejoan Saikat', section: 'A' },
-  { studentId: '2024510184', name: 'Rahat Ahmed', section: 'A' },
-  { studentId: '2024510185', name: 'Nusrat Jahan', section: 'A' },
-  { studentId: '2024510186', name: 'Tasnim Rahman', section: 'A' },
-  { studentId: '2024510187', name: 'Fahim Hasan', section: 'A' },
-  { studentId: '2024510188', name: 'Sabrina Khan', section: 'A' },
-  { studentId: '2024510189', name: 'Tanvir Islam', section: 'A' },
-  { studentId: '2024510190', name: 'Fariha Aziz', section: 'A' },
-  { studentId: '2024510191', name: 'Imran Hossain', section: 'B' },
-  { studentId: '2024510192', name: 'Sadia Akter', section: 'B' }
+  { studentId: '2024510183', name: 'Mashfi Rejoan Saikat', section: '1' },
+  { studentId: '2024510184', name: 'Rahat Ahmed', section: '1' },
+  { studentId: '2024510185', name: 'Nusrat Jahan', section: '1' },
+  { studentId: '2024510186', name: 'Tasnim Rahman', section: '1' },
+  { studentId: '2024510187', name: 'Fahim Hasan', section: '1' },
+  { studentId: '2024510188', name: 'Sabrina Khan', section: '1' },
+  { studentId: '2024510189', name: 'Tanvir Islam', section: '1' },
+  { studentId: '2024510190', name: 'Fariha Aziz', section: '1' },
+  { studentId: '2024510191', name: 'Imran Hossain', section: '2' },
+  { studentId: '2024510192', name: 'Sadia Akter', section: '2' }
 ];
 
 interface StudentPerformance {

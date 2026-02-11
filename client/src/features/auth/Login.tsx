@@ -65,6 +65,7 @@ const Login = () => {
             </div>
           )}
 
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Username/ID Input */}
             <div className="relative">
@@ -107,16 +108,22 @@ const Login = () => {
 
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-white cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-white/50"
-                />
-                <span>Remember me</span>
+              <label className="group inline-flex items-center gap-3 text-white/90 cursor-pointer">
+                <span className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${rememberMe ? 'bg-[#1D546C]' : 'bg-white/30'}`}>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${rememberMe ? 'translate-x-5' : 'translate-x-1'}`} />
+                </span>
+                <span className="font-medium group-hover:text-white">Remember me</span>
               </label>
-              <a href="/forgot-password" className="text-white hover:text-white/80 transition">
+              <a
+                href="/forgot-password"
+                className="text-white/90 font-medium px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 transition"
+              >
                 Forgot password?
               </a>
             </div>
@@ -132,13 +139,6 @@ const Login = () => {
               {loading ? 'LOGGING IN...' : 'LOGIN'}
             </button>
 
-            {/* Register Link */}
-            <p className="text-center text-white text-sm mt-6">
-              Don&apos;t have an account?{' '}
-              <a href="/register" className="font-semibold hover:underline">
-                Register
-              </a>
-            </p>
           </form>
         </div>
       </div>

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import AdminDashboardLayout from '../../components/AdminDashboardLayout';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import AdminModal from '../../components/AdminModal';
 import AdminForm, { FormField } from '../../components/AdminForm';
-import { Plus, Edit, Trash2, Eye, UserX, UserCheck, Upload, Download, Phone, Mail, Calendar, Award } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, UserX, UserCheck, Upload, Download, Phone, Mail, Calendar, Award, Droplet } from 'lucide-react';
 import adminService from '../../services/adminService';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
@@ -44,6 +43,7 @@ const TeacherManagement: React.FC = () => {
           designation: 'Professor',
           specialization: 'Machine Learning',
           teacherId: 'CSE-T-001',
+          bloodGroup: 'A+',
           status: 'Active',
           coursesAssigned: 3,
           joinDate: '2022-01-15' 
@@ -57,6 +57,7 @@ const TeacherManagement: React.FC = () => {
           designation: 'Associate Professor',
           specialization: 'Database Systems',
           teacherId: 'CSE-T-002',
+          bloodGroup: 'B+',
           status: 'Active',
           coursesAssigned: 2,
           joinDate: '2021-06-20' 
@@ -70,6 +71,7 @@ const TeacherManagement: React.FC = () => {
           designation: 'Assistant Professor',
           specialization: 'Web Development',
           teacherId: 'CSE-T-003',
+          bloodGroup: 'O+',
           status: 'Inactive',
           coursesAssigned: 0,
           joinDate: '2023-03-10' 
@@ -96,6 +98,16 @@ const TeacherManagement: React.FC = () => {
       { label: 'Lecturer', value: 'Lecturer' }
     ]},
     { name: 'specialization', label: 'Specialization', type: 'text', required: true, placeholder: 'e.g., Machine Learning' },
+    { name: 'bloodGroup', label: 'Blood Group', type: 'select', options: [
+      { label: 'A+', value: 'A+' },
+      { label: 'A-', value: 'A-' },
+      { label: 'B+', value: 'B+' },
+      { label: 'B-', value: 'B-' },
+      { label: 'AB+', value: 'AB+' },
+      { label: 'AB-', value: 'AB-' },
+      { label: 'O+', value: 'O+' },
+      { label: 'O-', value: 'O-' }
+    ]},
     { name: 'status', label: 'Status', type: 'select', required: true, options: [
       { label: 'Active', value: 'Active' },
       { label: 'Inactive', value: 'Inactive' }
@@ -210,11 +222,18 @@ const TeacherManagement: React.FC = () => {
     { label: 'Delete', onClick: handleDeleteTeacher, color: 'red' as const, icon: <Trash2 size={18} /> }
   ];
 
-  if (loading) return <LoadingSpinner fullScreen />;
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <LoadingSpinner text="Loading teachers..." />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AdminDashboardLayout>
-      <div className="p-6">
+    <div className="p-6">
         <PageHeader
           title="Teachers Management"
           subtitle="Manage all faculty members"
@@ -337,6 +356,13 @@ const TeacherManagement: React.FC = () => {
                     </label>
                     <p className="text-gray-900">{selectedTeacher.phone}</p>
                   </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600 flex items-center gap-2 mb-1">
+                      <Droplet size={16} />
+                      Blood Group
+                    </label>
+                    <p className="text-gray-900">{selectedTeacher.bloodGroup || 'Not set'}</p>
+                  </div>
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -454,7 +480,6 @@ const TeacherManagement: React.FC = () => {
           </div>
         </AdminModal>
       </div>
-    </AdminDashboardLayout>
   );
 };
 

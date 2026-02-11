@@ -1,6 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Login from './features/auth/Login';
-import Register from './features/auth/Register';
 import ForgotPassword from './features/auth/ForgotPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import StudentDashboard from './features/dashboards/StudentDashboard';
@@ -10,18 +9,28 @@ import ModeratorDashboard from './components/ModeratorDashboard';
 import CafeteriaManagerDashboard from './components/CafeteriaManagerDashboard';
 import LibrarianDashboard from './components/LibrarianDashboard';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
+import AdminDashboardLayout from './components/AdminDashboardLayout';
 import AdminDashboardPage from './pages/admin/AdminDashboard';
 import AdminProfile from './pages/admin/AdminProfile';
 import AdminSettings from './pages/admin/AdminSettings';
 import TeacherManagement from './pages/admin/TeacherManagement';
 import StudentManagement from './pages/admin/StudentManagement';
 import CourseManagement from './pages/admin/CourseManagement';
+import SectionManagement from './pages/admin/SectionManagement';
+import RoutineManagement from './pages/admin/RoutineManagement';
+import AcademicCalendar from './pages/admin/AcademicCalendar';
+import EventCalendar from './pages/admin/EventCalendar';
+import RegistrationPortal from './pages/admin/RegistrationPortal';
+import RegistrationOversight from './pages/admin/RegistrationOversight';
+import ComplaintManagement from './pages/admin/ComplaintManagement';
+import AnnouncementManagement from './pages/admin/AnnouncementManagement';
+import ExamScheduleManagement from './pages/admin/ExamScheduleManagement';
+import GradeSubmissionTracker from './pages/admin/GradeSubmissionTracker';
+import ReportGeneration from './pages/admin/ReportGeneration';
 import CourseManagementFeature from './features/courses/CourseManagement';
-import Courses from './features/courses/Courses';
 import Attendance from './features/attendance/Attendance';
 import Grades from './features/grades/Grades';
 import Timetable from './features/timetable/Timetable';
-import Assignments from './features/assignments/Assignments';
 import Achieve from './features/achieve/Achieve';
 import Library from './features/library/Library';
 import Cafeteria from './features/cafeteria/Cafeteria';
@@ -30,6 +39,8 @@ import BloodDonation from './features/blood-donation/BloodDonation';
 import Settings from './features/settings/Settings';
 import StudentProfile from './features/student-profile/StudentProfile';
 import Chatbot from './components/Chatbot';
+import StudentClassroom from './features/student-classroom/Classroom';
+import StudentEventCalendar from './features/event-calendar/StudentEventCalendar';
 
 // Teacher Components
 import TeacherDashboardMain from './features/teacher-dashboard/TeacherDashboard';
@@ -42,13 +53,22 @@ import TeacherRoutine from './features/teacher-routine/TeacherRoutine';
 import BloodDonationTeacher from './features/teacher-blood-donation/BloodDonation';
 import TeacherSettings from './features/teacher-settings/TeacherSettings';
 import TeacherProfile from './features/teacher-profile/TeacherProfile';
+import TeacherEventCalendar from './features/event-calendar/TeacherEventCalendar';
+
+const AdminShell = () => {
+  return (
+    <AdminDashboardLayout>
+      <Outlet />
+    </AdminDashboardLayout>
+  );
+};
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         
         <Route
@@ -70,10 +90,10 @@ const App = () => {
         />
 
         <Route
-          path="/student/my-courses"
+          path="/student/classroom"
           element={
             <ProtectedRoute allowedRoles={['student']}>
-              <Courses />
+              <StudentClassroom />
             </ProtectedRoute>
           }
         />
@@ -106,10 +126,10 @@ const App = () => {
         />
 
         <Route
-          path="/student/assignments"
+          path="/student/calendar"
           element={
             <ProtectedRoute allowedRoles={['student']}>
-              <Assignments />
+              <StudentEventCalendar />
             </ProtectedRoute>
           }
         />
@@ -176,7 +196,37 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        
+        {/* NEW ADMIN PANEL ROUTES */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedAdminRoute>
+              <AdminShell />
+            </ProtectedAdminRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="profile" element={<AdminProfile />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="teachers" element={<TeacherManagement />} />
+          <Route path="students" element={<StudentManagement />} />
+          <Route path="courses" element={<CourseManagement />} />
+          <Route path="course-sections" element={<SectionManagement />} />
+          <Route path="routine" element={<RoutineManagement />} />
+          <Route path="academic-calendar" element={<AcademicCalendar />} />
+          <Route path="calendar" element={<EventCalendar />} />
+          <Route path="registration-settings" element={<RegistrationPortal />} />
+          <Route path="registrations" element={<RegistrationOversight />} />
+          <Route path="exams" element={<ExamScheduleManagement />} />
+          <Route path="grade-submission" element={<GradeSubmissionTracker />} />
+          <Route path="complaints" element={<ComplaintManagement />} />
+          <Route path="announcements" element={<AnnouncementManagement />} />
+          <Route path="rooms" element={<div className="p-6 text-center">Coming Soon - Room Management</div>} />
+          <Route path="reports" element={<ReportGeneration />} />
+        </Route>
+        {/* END NEW ADMIN PANEL ROUTES */}
+
         {/* Teacher Routes */}
         <Route
           path="/teacher"
@@ -242,6 +292,15 @@ const App = () => {
         />
 
         <Route
+          path="/teacher/calendar"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherEventCalendar />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/teacher/blood-donation"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
@@ -267,168 +326,7 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        
-        {/* Redirect /admin to new dashboard */}
-        <Route
-          path="/admin"
-          element={<Navigate to="/admin/dashboard" replace />}
-        />
 
-        {/* NEW ADMIN PANEL ROUTES */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedAdminRoute>
-              <AdminDashboardPage />
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/profile"
-          element={
-            <ProtectedAdminRoute>
-              <AdminProfile />
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/settings"
-          element={
-            <ProtectedAdminRoute>
-              <AdminSettings />
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/teachers"
-          element={
-            <ProtectedAdminRoute>
-              <TeacherManagement />
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/students"
-          element={
-            <ProtectedAdminRoute>
-              <StudentManagement />
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/courses"
-          element={
-            <ProtectedAdminRoute>
-              <CourseManagement />
-            </ProtectedAdminRoute>
-          }
-        />
-
-        {/* Placeholder routes for remaining admin modules - to be implemented in later phases */}
-        <Route
-          path="/admin/course-sections"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Sections Management</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/routine"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Routine Management</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/academic-calendar"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Academic Calendar</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/registration-settings"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Registration Portal</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/registrations"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Registration Oversight</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/exams"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Exam Schedule</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/grade-submission"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Grade Submission</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/complaints"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Complaint Management</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/announcements"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Announcement Management</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/rooms"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Room Management</div>
-            </ProtectedAdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/reports"
-          element={
-            <ProtectedAdminRoute>
-              <div className="p-6 text-center">Coming Soon - Reports</div>
-            </ProtectedAdminRoute>
-          }
-        />
-        {/* END NEW ADMIN PANEL ROUTES */}
 
         <Route
           path="/moderator"

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Lock, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
-import AdminDashboardLayout from '../../components/AdminDashboardLayout';
 import adminService from '../../services/adminService';
 
 const AdminSettings: React.FC = () => {
@@ -17,12 +16,6 @@ const AdminSettings: React.FC = () => {
     confirm: false
   });
 
-  const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    systemNotifications: true,
-    smsAlerts: false,
-    reportFrequency: 'weekly'
-  });
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
@@ -77,32 +70,12 @@ const AdminSettings: React.FC = () => {
     }
   };
 
-  const handlePreferenceChange = (key: string, value: any) => {
-    setPreferences((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleSavePreferences = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      // API call would go here
-      // await adminService.updateSettings(preferences);
-      setSuccess('Preferences saved successfully');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError('Failed to save preferences');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
-    <AdminDashboardLayout>
-      <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600 mt-2">Manage your account and system preferences</p>
+          <p className="text-gray-600 mt-2">Update your account password</p>
         </div>
 
         {error && (
@@ -203,87 +176,7 @@ const AdminSettings: React.FC = () => {
           </form>
         </div>
 
-        {/* Notification Preferences */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Notification Preferences</h2>
-
-          <div className="space-y-4 mb-6">
-            {/* Email Notifications */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <p className="font-medium text-gray-900">Email Notifications</p>
-                <p className="text-sm text-gray-600">Receive important notifications via email</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.emailNotifications}
-                  onChange={(e) => handlePreferenceChange('emailNotifications', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#0C2B4E] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0C2B4E]" />
-              </label>
-            </div>
-
-            {/* System Notifications */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <p className="font-medium text-gray-900">System Notifications</p>
-                <p className="text-sm text-gray-600">In-app notifications for system updates</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.systemNotifications}
-                  onChange={(e) => handlePreferenceChange('systemNotifications', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#0C2B4E] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0C2B4E]" />
-              </label>
-            </div>
-
-            {/* SMS Alerts */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <p className="font-medium text-gray-900">SMS Alerts</p>
-                <p className="text-sm text-gray-600">Critical alerts via SMS</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.smsAlerts}
-                  onChange={(e) => handlePreferenceChange('smsAlerts', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#0C2B4E] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0C2B4E]" />
-              </label>
-            </div>
-
-            {/* Report Frequency */}
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <label className="block text-sm font-medium text-gray-900 mb-2">Report Frequency</label>
-              <select
-                value={preferences.reportFrequency}
-                onChange={(e) => handlePreferenceChange('reportFrequency', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0C2B4E] focus:border-transparent"
-              >
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
-            </div>
-          </div>
-
-          <button
-            onClick={handleSavePreferences}
-            disabled={loading}
-            className="w-full bg-[#0C2B4E] text-white py-2 rounded-lg font-medium hover:bg-[#0a1f37] disabled:opacity-50 transition"
-          >
-            {loading ? 'Saving...' : 'Save Preferences'}
-          </button>
-        </div>
       </div>
-    </AdminDashboardLayout>
   );
 };
 

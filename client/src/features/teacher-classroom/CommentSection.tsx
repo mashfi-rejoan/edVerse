@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Send, Trash2 } from 'lucide-react';
 import authService from '../../services/authService';
+import { apiUrl } from '../../utils/apiBase';
 
 interface Comment {
   userId: string;
@@ -30,7 +31,7 @@ const CommentSection = ({ postId, comments, onCommentAdded }: CommentSectionProp
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`http://localhost:4000/api/classroom/${postId}/comments`, {
+      const response = await fetch(apiUrl(`/api/classroom/${postId}/comments`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -79,7 +80,7 @@ const CommentSection = ({ postId, comments, onCommentAdded }: CommentSectionProp
     if (!window.confirm('Delete this comment?')) return;
 
     try {
-      await fetch(`http://localhost:4000/api/classroom/${postId}/comments/${index}`, {
+      await fetch(apiUrl(`/api/classroom/${postId}/comments/${index}`), {
         method: 'DELETE'
       });
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Send, Clock, Upload, FileText, Trash2 } from 'lucide-react';
 import authService from '../../services/authService';
+import { apiUrl } from '../../utils/apiBase';
 
 interface CreatePostProps {
   courseCode: string;
@@ -96,7 +97,7 @@ const CreatePost = ({
 
       // Try to save to API
       try {
-        const response = await fetch('http://localhost:4000/api/classroom', {
+        const response = await fetch(apiUrl('/api/classroom'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

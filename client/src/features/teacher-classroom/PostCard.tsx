@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MoreVertical, Pin, Trash2, MessageCircle, Eye, FileText, Download } from 'lucide-react';
 import CommentSection from './CommentSection';
+import { apiUrl } from '../../utils/apiBase';
 
 interface PostProps {
   post: any;
@@ -26,7 +27,7 @@ const PostCard = ({ post, onDeleted, onPinned, isTeacher }: PostProps) => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      const response = await fetch(`http://localhost:4000/api/classroom/${post._id}`, {
+      const response = await fetch(apiUrl(`/api/classroom/${post._id}`), {
         method: 'DELETE'
       });
 
@@ -48,7 +49,7 @@ const PostCard = ({ post, onDeleted, onPinned, isTeacher }: PostProps) => {
 
   const handlePin = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/api/classroom/${post._id}/pin`, {
+      const response = await fetch(apiUrl(`/api/classroom/${post._id}/pin`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isPinned: !post.isPinned })

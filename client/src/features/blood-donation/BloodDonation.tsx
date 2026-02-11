@@ -1,419 +1,418 @@
 import { useState, useEffect } from 'react';
+import { Heart, Plus, MapPin, Phone, AlertCircle, CheckCircle, Droplets } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { HeartPulse, Droplet, MapPin, Edit2 } from 'lucide-react';
-import { apiUrl } from '../../utils/apiBase';
-
-interface BloodDonation {
-  _id: string;
-  studentId: string;
-  donorName: string;
-  bloodType: string;
-  contact: string;
-  currentAddress: string;
-  lastDonationDate?: string;
-  nextEligibleDate?: string;
-  isAvailable: boolean;
-  status: string;
-}
-
-// Mock data for demo purposes (will be replaced with actual API data when available)
-const mockDonors: BloodDonation[] = [
-  {
-    _id: '1',
-    studentId: '2022-1-60-001',
-    donorName: 'Ahmed Hassan',
-    bloodType: 'O+',
-    contact: '01712345678',
-    currentAddress: 'House 12, Road 5, Dhanmondi, Dhaka',
-    lastDonationDate: '2025-11-15',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '2',
-    studentId: '2022-1-60-015',
-    donorName: 'Fatima Rahman',
-    bloodType: 'A+',
-    contact: '01823456789',
-    currentAddress: 'Flat 3B, Green View Apartment, Mirpur-10, Dhaka',
-    lastDonationDate: '2025-12-01',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '3',
-    studentId: '2022-1-60-028',
-    donorName: 'Kamal Hossain',
-    bloodType: 'B+',
-    contact: '01934567890',
-    currentAddress: 'House 45, Sector 7, Uttara, Dhaka',
-    lastDonationDate: '2025-10-20',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '4',
-    studentId: '2022-1-60-042',
-    donorName: 'Nusrat Jahan',
-    bloodType: 'AB+',
-    contact: '01645678901',
-    currentAddress: 'House 23, Road 11, Banani, Dhaka',
-    lastDonationDate: '2025-09-10',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '5',
-    studentId: '2022-1-60-056',
-    donorName: 'Rakib Islam',
-    bloodType: 'O-',
-    contact: '01756789012',
-    currentAddress: 'Flat 5C, Rose Garden, Mohammadpur, Dhaka',
-    lastDonationDate: '2025-08-25',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '6',
-    studentId: '2022-1-60-073',
-    donorName: 'Sadia Akter',
-    bloodType: 'A-',
-    contact: '01867890123',
-    currentAddress: 'House 78, Road 3, Bashundhara R/A, Dhaka',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '7',
-    studentId: '2022-1-60-089',
-    donorName: 'Tanvir Ahmed',
-    bloodType: 'B-',
-    contact: '01978901234',
-    currentAddress: 'Flat 2A, Diamond Tower, Gulshan-1, Dhaka',
-    lastDonationDate: '2025-11-30',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '8',
-    studentId: '2022-1-60-101',
-    donorName: 'Maliha Khan',
-    bloodType: 'AB-',
-    contact: '01689012345',
-    currentAddress: 'House 34, Road 8, Banasree, Dhaka',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '9',
-    studentId: '2022-1-60-118',
-    donorName: 'Fahim Shahriar',
-    bloodType: 'O+',
-    contact: '01790123456',
-    currentAddress: 'Flat 7D, Sky Garden, Motijheel, Dhaka',
-    lastDonationDate: '2025-12-15',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '10',
-    studentId: '2022-1-60-125',
-    donorName: 'Ayesha Siddika',
-    bloodType: 'A+',
-    contact: '01801234567',
-    currentAddress: 'House 56, Sector 12, Uttara, Dhaka',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '11',
-    studentId: '2022-1-60-159',
-    donorName: 'Sharmin Sultana',
-    bloodType: 'A-',
-    contact: '01734567892',
-    currentAddress: 'Flat 6B, Pearl Residency, Mirpur-2, Dhaka',
-    lastDonationDate: '2025-09-18',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '12',
-    studentId: '2022-1-60-166',
-    donorName: 'Rifat Mahmud',
-    bloodType: 'AB+',
-    contact: '01845678903',
-    currentAddress: 'House 22, Road 4, Lalmatia, Dhaka',
-    isAvailable: true,
-    status: 'Available',
-  },
-  {
-    _id: '13',
-    studentId: '2022-1-60-174',
-    donorName: 'Sabrina Islam',
-    bloodType: 'O-',
-    contact: '01956789014',
-    currentAddress: 'Flat 8A, Green City, Badda, Dhaka',
-    lastDonationDate: '2025-11-20',
-    isAvailable: true,
-    status: 'Available',
-  },
-];
+import authService from '../../services/authService';
 
 const BloodDonation = () => {
-  const [donors, setDonors] = useState<BloodDonation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedBloodType, setSelectedBloodType] = useState('All');
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [currentAddress, setCurrentAddress] = useState('');
-  const [isAvailable, setIsAvailable] = useState(true);
-  const [saveMessage, setSaveMessage] = useState('');
+  const user = authService.getCurrentUser();
+  const studentBloodType = user?.bloodGroup || 'O+';
+  const [donations, setDonations] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'my-donations' | 'find-donors'>('my-donations');
+  const [searchBloodType, setSearchBloodType] = useState<string>('');
+  const [formData, setFormData] = useState({
+    bloodType: studentBloodType,
+    donationDate: new Date().toISOString().split('T')[0],
+    location: '',
+    notes: ''
+  });
 
-  const bloodTypes = ['All', 'O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const studentId = user.universityId || '2024510183';
+  const bloodTypes = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
+  const locations = [
+    'Red Crescent Center',
+    'City Hospital',
+    'Medical College Hospital',
+    'Community Health Center',
+    'Blood Bank',
+    'Other'
+  ];
 
   useEffect(() => {
-    fetchDonors();
-    // Load student's current info
-    const savedAddress = localStorage.getItem('studentBloodDonorAddress');
-    const savedAvailability = localStorage.getItem('studentBloodDonorAvailability');
-    if (savedAddress) setCurrentAddress(savedAddress);
-    if (savedAvailability !== null) setIsAvailable(savedAvailability === 'true');
+    const saved = localStorage.getItem('student_blood_donations');
+    if (saved) {
+      setDonations(JSON.parse(saved));
+    }
   }, []);
 
-  const handleUpdateProfile = () => {
-    // Save to localStorage (in real app, would call API)
-    localStorage.setItem('studentBloodDonorAddress', currentAddress);
-    localStorage.setItem('studentBloodDonorAvailability', isAvailable.toString());
-    
-    setSaveMessage('Profile updated successfully!');
-    setIsEditingProfile(false);
-    
-    setTimeout(() => setSaveMessage(''), 3000);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const newDonation = {
+      _id: Date.now().toString(),
+      ...formData,
+      donatedAt: new Date().toISOString(),
+      studentName: user?.name || 'Student',
+      studentId: user?.universityId || user?.id || 'STUDENT001'
+    };
+
+    const updated = [...donations, newDonation];
+    setDonations(updated);
+    localStorage.setItem('student_blood_donations', JSON.stringify(updated));
+
+    setFormData({
+      bloodType: studentBloodType,
+      donationDate: new Date().toISOString().split('T')[0],
+      location: '',
+      notes: ''
+    });
+    setShowForm(false);
   };
 
-  const fetchDonors = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(apiUrl('/api/blood-donation'));
-      if (response.ok) {
-        const data = await response.json();
-        if (data && Array.isArray(data) && data.length > 0) {
-          setDonors(data);
-        } else {
-          // Fallback to mock data if API returns empty
-          setDonors(mockDonors);
-        }
-      } else {
-        // Fallback to mock data if API fails
-        setDonors(mockDonors);
-      }
-    } catch (error) {
-      console.error('Error fetching donors:', error);
-      // Fallback to mock data on error
-      setDonors(mockDonors);
-    } finally {
-      setLoading(false);
+  const handleDelete = (id: string) => {
+    const updated = donations.filter(d => d._id !== id);
+    setDonations(updated);
+    localStorage.setItem('student_blood_donations', JSON.stringify(updated));
+  };
+
+  const getBloodTypeColor = (type: string) => {
+    if (type.includes('+')) {
+      return 'bg-red-500';
     }
+    return 'bg-red-600';
   };
 
-  const filteredDonors = selectedBloodType === 'All'
-    ? donors.filter(donor => donor.isAvailable)
-    : donors.filter(donor => donor.bloodType === selectedBloodType && donor.isAvailable);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
 
-  const availableDonors = filteredDonors.filter(d => d.status === 'Available' && d.isAvailable);
+  const calculateDaysSinceDonation = (dateString: string) => {
+    const donationDate = new Date(dateString);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - donationDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const canDonateAgain = (lastDonation: any) => {
+    const daysSince = calculateDaysSinceDonation(lastDonation.donationDate);
+    return daysSince >= 56;
+  };
+
+  const mockBloodDonors = [
+    { _id: '1', name: 'Karim Ahmed', bloodType: 'O+', phone: '+880 1700 123456', location: 'Dhaka', lastDonated: '2026-01-15' },
+    { _id: '2', name: 'Fatima Islam', bloodType: 'B+', phone: '+880 1800 234567', location: 'Dhaka', lastDonated: '2026-02-01' },
+    { _id: '3', name: 'Rajib Kumar', bloodType: 'A+', phone: '+880 1900 345678', location: 'Dhaka', lastDonated: '2025-12-20' },
+    { _id: '4', name: 'Sarah Rahman', bloodType: 'O+', phone: '+880 1600 456789', location: 'Dhaka', lastDonated: '2026-01-28' },
+    { _id: '5', name: 'Hassan Morshed', bloodType: 'AB+', phone: '+880 1700 567890', location: 'Dhaka', lastDonated: '2025-11-10' },
+    { _id: '6', name: 'Nadia Sultana', bloodType: 'B-', phone: '+880 1800 678901', location: 'Dhaka', lastDonated: '2026-01-05' },
+    { _id: '7', name: 'Imran Khan', bloodType: 'A-', phone: '+880 1900 789012', location: 'Dhaka', lastDonated: '2025-10-30' },
+    { _id: '8', name: 'Sumi Das', bloodType: 'O-', phone: '+880 1600 890123', location: 'Dhaka', lastDonated: '2026-01-20' },
+  ];
+
+  const filteredDonors = searchBloodType
+    ? mockBloodDonors.filter(donor => donor.bloodType === searchBloodType)
+    : mockBloodDonors;
 
   return (
     <DashboardLayout title="Blood Donation">
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <HeartPulse className="text-red-600" size={28} />
-            Blood Donation Registry
-          </h1>
-        </div>
-
-        {/* Student Profile Section */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Edit2 size={20} className="text-[#0C2B4E]" />
-              My Donor Profile
-            </h2>
-            {!isEditingProfile && (
+        <div className="bg-gradient-to-r from-[#0C2B4E] to-[#1A3D64] rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Heart size={40} className="text-red-300 flex-shrink-0" />
+              <div>
+                <h1 className="text-3xl font-bold mb-1">Blood Donation</h1>
+                <p className="text-blue-100">Track your blood donations and help save lives</p>
+              </div>
+            </div>
+            {activeTab === 'my-donations' && (
               <button
-                onClick={() => setIsEditingProfile(true)}
-                className="px-4 py-2 bg-[#0C2B4E] text-white rounded-lg text-sm font-medium hover:bg-[#1A3D64] transition"
+                onClick={() => setShowForm(true)}
+                className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition font-semibold whitespace-nowrap"
               >
-                Update Profile
+                <Plus size={20} />
+                Record Donation
               </button>
             )}
           </div>
+        </div>
 
-          {saveMessage && (
-            <div className="mb-4 p-3 bg-green-100 text-green-800 rounded-lg text-sm">
-              {saveMessage}
+        <div className="flex gap-4 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('my-donations')}
+            className={`px-6 py-3 font-medium transition-all ${
+              activeTab === 'my-donations'
+                ? 'text-[#0C2B4E] border-b-2 border-[#0C2B4E]'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            My Donations
+          </button>
+          <button
+            onClick={() => setActiveTab('find-donors')}
+            className={`px-6 py-3 font-medium transition-all ${
+              activeTab === 'find-donors'
+                ? 'text-[#0C2B4E] border-b-2 border-[#0C2B4E]'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Find Blood Donors
+          </button>
+        </div>
+
+        {activeTab === 'my-donations' ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <h3 className="text-gray-600 text-sm font-semibold mb-2">Total Donations</h3>
+                <p className="text-4xl font-bold text-[#0C2B4E]">{donations.length}</p>
+              </div>
+
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <h3 className="text-gray-600 text-sm font-semibold mb-2">Lives Helped</h3>
+                <p className="text-4xl font-bold text-red-400">{donations.length * 3}</p>
+                <p className="text-gray-600 text-xs mt-1">~3 people per donation</p>
+              </div>
+
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <h3 className="text-gray-600 text-sm font-semibold mb-2">Last Donation</h3>
+                {donations.length > 0 ? (
+                  <p className="text-lg font-semibold text-gray-800">
+                    {calculateDaysSinceDonation(donations[donations.length - 1].donationDate)} days ago
+                  </p>
+                ) : (
+                  <p className="text-gray-500">No donations yet</p>
+                )}
+              </div>
             </div>
-          )}
 
-          {isEditingProfile ? (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <MapPin size={16} />
-                  Current Address
-                </label>
-                <textarea
-                  value={currentAddress}
-                  onChange={(e) => setCurrentAddress(e.target.value)}
-                  placeholder="Enter your current address"
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0C2B4E] focus:border-transparent"
-                />
-              </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">Donation History</h2>
 
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="availability"
-                  checked={isAvailable}
-                  onChange={(e) => setIsAvailable(e.target.checked)}
-                  className="w-4 h-4 text-[#0C2B4E] border-gray-300 rounded focus:ring-[#0C2B4E]"
-                />
-                <label htmlFor="availability" className="text-sm font-medium text-gray-700">
-                  I am available for blood donation
-                </label>
-              </div>
+              {donations.length === 0 ? (
+                <div className="text-center py-12">
+                  <Droplets size={48} className="mx-auto text-gray-400 mb-4 opacity-40" />
+                  <p className="text-gray-600 mb-4">No donations recorded yet</p>
+                  <p className="text-gray-500 text-sm">Click "Record Donation" to add your donation history</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {[...donations].reverse().map((donation) => {
+                    const canDonate = canDonateAgain(donation);
+                    const daysSince = calculateDaysSinceDonation(donation.donationDate);
+                    const daysUntilEligible = 56 - daysSince;
 
+                    return (
+                      <div
+                        key={donation._id}
+                        className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition border-l-4 border-red-400"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className={`${getBloodTypeColor(donation.bloodType)} text-white px-3 py-1 rounded-full font-bold text-sm`}>
+                                {donation.bloodType}
+                              </div>
+                              <h3 className="text-lg font-bold text-gray-800">{formatDate(donation.donationDate)}</h3>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-gray-600 mb-2">
+                              <MapPin size={16} />
+                              <span className="text-sm">{donation.location}</span>
+                            </div>
+
+                            {donation.notes && (
+                              <p className="text-gray-700 text-sm italic">"{donation.notes}"</p>
+                            )}
+                          </div>
+
+                          <div className="text-right">
+                            {canDonate ? (
+                              <div className="flex items-center gap-1 text-green-600 font-semibold text-sm mb-2">
+                                <CheckCircle size={16} />
+                                Eligible to donate
+                              </div>
+                            ) : (
+                              <div className="text-amber-600 text-sm mb-2">
+                                Eligible in {daysUntilEligible} days
+                              </div>
+                            )}
+
+                            <button
+                              onClick={() => handleDelete(donation._id)}
+                              className="text-red-600 hover:text-red-700 text-sm font-semibold transition"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-6 mt-8">
               <div className="flex gap-3">
-                <button
-                  onClick={handleUpdateProfile}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
-                >
-                  Save Changes
-                </button>
-                <button
-                  onClick={() => setIsEditingProfile(false)}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
-                >
-                  Cancel
-                </button>
+                <AlertCircle size={24} className="text-amber-600 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="text-amber-900 font-bold mb-2">Blood Donation Guidelines</h3>
+                  <ul className="text-amber-800 text-sm space-y-1">
+                    <li>• Minimum interval between donations: 56 days (8 weeks)</li>
+                    <li>• Age requirement: 18-60 years</li>
+                    <li>• Minimum weight: 50kg</li>
+                    <li>• Must be in good health and feeling well</li>
+                    <li>• Avoid fatty foods before donation</li>
+                  </ul>
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Student ID</p>
-                <p className="text-sm font-medium text-gray-900">{studentId}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Current Address</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {currentAddress || 'Not set - Click "Update Profile" to add your address'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Availability Status</p>
-                <span
-                  className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
-                    isAvailable
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  {isAvailable ? 'Available' : 'Not Available'}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Blood Type Filter */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Filter by Blood Type
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {bloodTypes.map((type) => (
-              <button
-                key={type}
-                onClick={() => setSelectedBloodType(type)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  selectedBloodType === type
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Statistics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <p className="text-sm text-gray-600 mb-1">Total Donors</p>
-            <p className="text-3xl font-bold text-gray-900">{filteredDonors.length}</p>
-          </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <p className="text-sm text-gray-600 mb-1">Available Donors</p>
-            <p className="text-3xl font-bold text-green-600">{availableDonors.length}</p>
-          </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <p className="text-sm text-gray-600 mb-1">Selected Type</p>
-            <p className="text-3xl font-bold text-red-600">{selectedBloodType}</p>
-          </div>
-        </div>
-
-        {/* Donors List */}
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading donors...</p>
-          </div>
-        ) : filteredDonors.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <Droplet className="mx-auto text-gray-400 mb-4" size={48} />
-            <p className="text-gray-500">No donors found for this blood type</p>
-          </div>
+          </>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Available Donors</h2>
-            <div className="space-y-3">
-              {filteredDonors.map((donor) => (
-                <div
-                  key={donor._id}
-                  className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                        <Droplet className="text-red-600" size={28} />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">{donor.donorName}</h3>
-                        <p className="text-sm text-gray-600">ID: {donor.studentId}</p>
-                        <p className="text-sm font-medium text-red-600">Blood Type: {donor.bloodType}</p>
-                      </div>
-                    </div>
-                    <span
-                      className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800"
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Find Blood Donors</h2>
+              <p className="text-sm text-gray-600">Select a blood type to find available donors</p>
+            </div>
+
+            <div className="mb-8">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Select Blood Type</h3>
+              <div className="grid grid-cols-4 gap-3">
+                {bloodTypes.map((type) => {
+                  const isPositive = type.includes('+');
+                  const baseType = type.replace('+', '').replace('-', '');
+                  const rhFactor = isPositive ? 'Positive' : 'Negative';
+                  const isSelected = searchBloodType === type;
+
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setSearchBloodType(isSelected ? '' : type)}
+                      className={`relative rounded-lg p-4 transition-all ${
+                        isSelected 
+                          ? 'bg-red-600 ring-4 ring-red-200' 
+                          : 'bg-red-500 hover:bg-red-600'
+                      }`}
                     >
-                      Available
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100">
+                      <div className="text-white text-center">
+                        <div className="text-3xl font-bold mb-1">{baseType}{isPositive ? '+' : '-'}</div>
+                        <div className="text-xs font-medium opacity-90">Rh {rhFactor}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {searchBloodType && (
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-sm text-gray-600">
+                    Showing donors with blood type <span className="font-bold text-red-600">{searchBloodType}</span>
+                  </p>
+                  <button
+                    onClick={() => setSearchBloodType('')}
+                    className="text-sm text-red-600 hover:text-red-700 font-semibold"
+                  >
+                    Clear Filter
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredDonors.map((donor) => (
+                <div key={donor._id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Contact</p>
-                      <p className="text-sm font-medium text-gray-900">{donor.contact}</p>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="bg-red-600 text-white px-3 py-1 rounded-full font-bold text-sm">
+                          {donor.bloodType}
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800">{donor.name}</h3>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600 mb-1">
+                        <Phone size={16} />
+                        <span className="text-sm">{donor.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <MapPin size={16} />
+                        <span className="text-sm">{donor.location}</span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Current Address</p>
-                      <p className="text-sm font-medium text-gray-900">{donor.currentAddress}</p>
+                    <div className="text-xs text-gray-500">
+                      Last donated: {formatDate(donor.lastDonated)}
                     </div>
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {showForm && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-800">Record Donation</h3>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Blood Type</label>
+                  <select
+                    value={studentBloodType}
+                    disabled
+                    className="mt-1 w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                  >
+                    <option value={studentBloodType}>{studentBloodType}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Donation Date</label>
+                  <input
+                    type="date"
+                    value={formData.donationDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, donationDate: e.target.value }))}
+                    className="mt-1 w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0C2B4E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Location</label>
+                  <select
+                    value={formData.location}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                    className="mt-1 w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0C2B4E]"
+                  >
+                    <option value="">Select location</option>
+                    {locations.map((loc) => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Notes (Optional)</label>
+                  <textarea
+                    rows={3}
+                    value={formData.notes}
+                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    className="mt-1 w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0C2B4E]"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-[#0C2B4E] text-white rounded-lg hover:bg-[#1A3D64]"
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

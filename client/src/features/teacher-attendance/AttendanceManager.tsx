@@ -14,22 +14,22 @@ import {
 
 // Mock data
 const mockCourses = [
-  { courseCode: 'CS201', courseName: 'Data Structures', sections: ['A', 'B'] },
-  { courseCode: 'CS210', courseName: 'Database Systems', sections: ['A'] },
-  { courseCode: 'CS301', courseName: 'Software Engineering', sections: ['A'] }
+  { courseCode: 'CS201', courseName: 'Data Structures', sections: ['1', '2'] },
+  { courseCode: 'CS210', courseName: 'Database Systems', sections: ['1'] },
+  { courseCode: 'CS301', courseName: 'Software Engineering', sections: ['1'] }
 ];
 
 const mockStudents = [
-  { studentId: '2024510183', name: 'Mashfi Rejoan Saikat', section: 'A', attendance: 92 },
-  { studentId: '2024510184', name: 'Rahat Ahmed', section: 'A', attendance: 88 },
-  { studentId: '2024510185', name: 'Nusrat Jahan', section: 'A', attendance: 95 },
-  { studentId: '2024510186', name: 'Tasnim Rahman', section: 'A', attendance: 85 },
-  { studentId: '2024510187', name: 'Fahim Hasan', section: 'A', attendance: 78 },
-  { studentId: '2024510188', name: 'Sabrina Khan', section: 'A', attendance: 90 },
-  { studentId: '2024510189', name: 'Tanvir Islam', section: 'A', attendance: 82 },
-  { studentId: '2024510190', name: 'Fariha Aziz', section: 'A', attendance: 94 },
-  { studentId: '2024510191', name: 'Imran Hossain', section: 'B', attendance: 87 },
-  { studentId: '2024510192', name: 'Sadia Akter', section: 'B', attendance: 91 }
+  { studentId: '2024510183', name: 'Mashfi Rejoan Saikat', section: '1', attendance: 92 },
+  { studentId: '2024510184', name: 'Rahat Ahmed', section: '1', attendance: 88 },
+  { studentId: '2024510185', name: 'Nusrat Jahan', section: '1', attendance: 95 },
+  { studentId: '2024510186', name: 'Tasnim Rahman', section: '1', attendance: 85 },
+  { studentId: '2024510187', name: 'Fahim Hasan', section: '1', attendance: 78 },
+  { studentId: '2024510188', name: 'Sabrina Khan', section: '1', attendance: 90 },
+  { studentId: '2024510189', name: 'Tanvir Islam', section: '1', attendance: 82 },
+  { studentId: '2024510190', name: 'Fariha Aziz', section: '1', attendance: 94 },
+  { studentId: '2024510191', name: 'Imran Hossain', section: '2', attendance: 87 },
+  { studentId: '2024510192', name: 'Sadia Akter', section: '2', attendance: 91 }
 ];
 
 interface AttendanceRecord {
@@ -39,7 +39,7 @@ interface AttendanceRecord {
 
 const AttendanceManager = () => {
   const [selectedCourse, setSelectedCourse] = useState('CS201');
-  const [selectedSection, setSelectedSection] = useState('A');
+  const [selectedSection, setSelectedSection] = useState('1');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [students, setStudents] = useState(mockStudents);
   const [attendance, setAttendance] = useState<Record<string, 'present' | 'absent' | 'late'>>({});

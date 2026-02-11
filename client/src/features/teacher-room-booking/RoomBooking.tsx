@@ -10,12 +10,26 @@ const RoomBooking: React.FC = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [filterType, setFilterType] = useState<string>('all');
+  const [filterTime, setFilterTime] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
   const [rooms, setRooms] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const timeSlots = [
+    { value: 'all', label: 'All Times' },
+    { value: '08:00', label: '08:00 AM - 09:00 AM' },
+    { value: '09:00', label: '09:00 AM - 10:00 AM' },
+    { value: '10:00', label: '10:00 AM - 11:00 AM' },
+    { value: '11:00', label: '11:00 AM - 12:00 PM' },
+    { value: '12:00', label: '12:00 PM - 01:00 PM' },
+    { value: '14:00', label: '02:00 PM - 03:00 PM' },
+    { value: '15:00', label: '03:00 PM - 04:00 PM' },
+    { value: '16:00', label: '04:00 PM - 05:00 PM' },
+    { value: '17:00', label: '05:00 PM - 06:00 PM' }
+  ];
 
   // Mock data - will be replaced with API calls
   const mockRooms = [
@@ -40,30 +54,6 @@ const RoomBooking: React.FC = () => {
       capacity: 50,
       type: 'classroom',
       facilities: ['Projector', 'Whiteboard', 'AC'],
-      isAvailable: true,
-      maintenanceStatus: 'active'
-    },
-    {
-      _id: '3',
-      roomNumber: '105',
-      roomName: 'Seminar Hall',
-      building: 'Building B',
-      floor: 1,
-      capacity: 25,
-      type: 'seminar',
-      facilities: ['Projector', 'AC', 'WiFi', 'Video Conference'],
-      isAvailable: true,
-      maintenanceStatus: 'active'
-    },
-    {
-      _id: '4',
-      roomNumber: '401',
-      roomName: 'Auditorium',
-      building: 'Building C',
-      floor: 4,
-      capacity: 200,
-      type: 'auditorium',
-      facilities: ['Sound System', 'Projector', 'Stage', 'AC'],
       isAvailable: true,
       maintenanceStatus: 'active'
     }
@@ -210,7 +200,7 @@ const RoomBooking: React.FC = () => {
           <div>
             {/* Filters */}
             <div className="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-gray-700 text-sm font-semibold mb-2">
                     Select Date
@@ -235,8 +225,23 @@ const RoomBooking: React.FC = () => {
                     <option value="all">All Types</option>
                     <option value="classroom">Classroom</option>
                     <option value="lab">Lab</option>
-                    <option value="seminar">Seminar</option>
-                    <option value="auditorium">Auditorium</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 text-sm font-semibold mb-2">
+                    Time Slot
+                  </label>
+                  <select
+                    value={filterTime}
+                    onChange={(e) => setFilterTime(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {timeSlots.map((slot) => (
+                      <option key={slot.value} value={slot.value}>
+                        {slot.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

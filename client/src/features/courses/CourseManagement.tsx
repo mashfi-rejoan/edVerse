@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
+import { BookOpen } from 'lucide-react';
 import axios from 'axios';
 import { apiUrl } from '../../utils/apiBase';
 
@@ -301,11 +302,18 @@ const CourseManagement = () => {
 
   return (
     <DashboardLayout title="Registration">
-      <div className="p-8">
+      <div className="space-y-6">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0C2B4E]">Registration</h1>
-          <p className="text-gray-600 mt-2">Register for courses, manage enrollments, and plan your semester</p>
+        <div>
+          <div className="bg-gradient-to-br from-[#0C2B4E] via-[#1A3D64] to-[#1D546C] rounded-2xl p-6 shadow-lg text-white">
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-8 h-8" />
+              <div>
+                <h1 className="text-3xl font-bold">Registration</h1>
+                <p className="text-white/80 mt-1">Register for courses, manage enrollments, and plan your semester</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Loading State */}
@@ -339,7 +347,7 @@ const CourseManagement = () => {
         {!loading && !error && (
           <>
             {/* Current Semester Overview */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* Semester Info */}
                 <div className="md:col-span-1">

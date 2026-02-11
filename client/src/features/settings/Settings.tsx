@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import authService from '../../services/authService';
 import { User, Mail, Phone, Lock } from 'lucide-react';
@@ -11,13 +11,8 @@ const Settings = () => {
   );
   
   const [profile, setProfile] = useState({
-    name: user?.name || '',
     email: user?.email || '',
-    phone: '',
-    universityId: user?.universityId || '',
-    department: 'Computer Science',
-    semester: '6th',
-    batch: '2022-2026'
+    phone: ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -29,6 +24,21 @@ const Settings = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('studentProfile');
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile);
+        setProfile({
+          email: parsed.email || user?.email || '',
+          phone: parsed.phone || ''
+        });
+      } catch {
+        setProfile({ email: user?.email || '', phone: '' });
+      }
+    }
+  }, [user?.email]);
+
   const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -37,6 +47,22 @@ const Settings = () => {
     try {
       // Save profile data to localStorage
       localStorage.setItem('studentProfile', JSON.stringify(profile));
+      const existingUser = localStorage.getItem('user');
+      if (existingUser) {
+        try {
+          const parsedUser = JSON.parse(existingUser);
+          localStorage.setItem(
+            'user',
+            JSON.stringify({
+              ...parsedUser,
+              email: profile.email,
+              phone: profile.phone
+            })
+          );
+        } catch {
+          // Ignore invalid user data
+        }
+      }
       setSuccessMessage('Profile updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
@@ -144,7 +170,7 @@ const Settings = () => {
                 />
               ) : (
                 <span className="text-lg font-semibold text-gray-500">
-                  {profile.name?.charAt(0) || 'S'}
+                  {user?.name?.charAt(0) || 'S'}
                 </span>
               )}
             </div>
@@ -168,30 +194,6 @@ const Settings = () => {
           </div>
           <form onSubmit={handleProfileUpdate} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={profile.name}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  University ID
-                </label>
-                <input
-                  type="text"
-                  value={profile.universityId}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                />
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email Address
@@ -221,30 +223,6 @@ const Settings = () => {
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Department
-                </label>
-                <input
-                  type="text"
-                  value={profile.department}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Semester
-                </label>
-                <input
-                  type="text"
-                  value={profile.semester}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
-                />
               </div>
             </div>
 

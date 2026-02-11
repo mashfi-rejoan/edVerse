@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { Clock, MapPin } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 
 interface ClassItem {
   course: string;
@@ -33,20 +33,64 @@ const Timetable = () => {
       }
     };
 
-    // Color mapping for each unique course
-    const courseColors: { [key: string]: string } = {
-      'CSE 207': 'bg-purple-100 border-purple-300',
-      'CSE 215': 'bg-red-100 border-red-300',
-      'CSE 231': 'bg-pink-100 border-pink-300',
-      'MAT 231': 'bg-indigo-100 border-indigo-300',
-      'CSE 210': 'bg-blue-100 border-blue-300',
-      'CSE 232': 'bg-cyan-100 border-cyan-300',
-      'CSE 209': 'bg-teal-100 border-teal-300',
-      'CSE 208': 'bg-emerald-100 border-emerald-300',
+    const timeSlots = [
+      { start: '08:00', end: '09:00' },
+      { start: '09:00', end: '10:00' },
+      { start: '10:00', end: '11:00' },
+      { start: '11:00', end: '12:00' },
+      { start: '12:00', end: '13:00' },
+      { start: '13:00', end: '14:00', isBreak: true },
+      { start: '14:00', end: '15:00' },
+      { start: '15:00', end: '16:00' },
+      { start: '16:00', end: '17:00' },
+      { start: '17:00', end: '18:00' }
+    ];
+
+    const to12Hour = (time: string) => {
+      const [hour, min] = time.split(':').map(Number);
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const adjusted = hour % 12 || 12;
+      return `${adjusted.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')} ${period}`;
     };
 
-    const getCourseColor = (courseCode: string) => {
-      return courseColors[courseCode] || 'bg-gray-100 border-gray-300';
+    const formatRange = (start: string, end: string) => `${to12Hour(start)} - ${to12Hour(end)}`;
+
+    const to24Hour = (timeLabel: string) => {
+      const [timePart, periodRaw] = timeLabel.trim().split(' ');
+      const period = periodRaw.toUpperCase();
+      let [hour, min] = timePart.split(':').map(Number);
+      if (period === 'PM' && hour !== 12) hour += 12;
+      if (period === 'AM' && hour === 12) hour = 0;
+      return { hour, min };
+    };
+
+    const getSlotKey = (timeLabel: string) => {
+      const { hour } = to24Hour(timeLabel);
+      return `${hour.toString().padStart(2, '0')}:00`;
+    };
+
+    const courseColorPool = [
+      'bg-blue-50 border-blue-200 text-blue-900',
+      'bg-emerald-50 border-emerald-200 text-emerald-900',
+      'bg-purple-50 border-purple-200 text-purple-900',
+      'bg-amber-50 border-amber-200 text-amber-900',
+      'bg-rose-50 border-rose-200 text-rose-900',
+      'bg-indigo-50 border-indigo-200 text-indigo-900'
+    ];
+
+    const getCourseStyle = (code: string) => {
+      const index = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % courseColorPool.length;
+      return courseColorPool[index];
+    };
+
+    const isCurrentSlot = (start: string, end: string) => {
+      const [sh, sm] = start.split(':').map(Number);
+      const [eh, em] = end.split(':').map(Number);
+      const now = new Date();
+      const current = now.getHours() * 60 + now.getMinutes();
+      const startMin = sh * 60 + sm;
+      const endMin = eh * 60 + em;
+      return current >= startMin && current < endMin;
     };
 
   const [schedule] = useState<DaySchedule[]>([
@@ -199,61 +243,117 @@ const Timetable = () => {
     }
   ]);
 
+  const routineData = schedule.flatMap((daySchedule) =>
+    daySchedule.classes.map((item) => {
+      const [startLabel, endLabel] = item.time.split('-').map((part) => part.trim());
+      return {
+        day: daySchedule.day,
+        courseCode: item.courseCode,
+        courseName: item.course,
+        room: `${item.room}${item.roomCode ? ` | ${item.roomCode}` : ''}`,
+        instructor: item.instructor,
+        timeRange: item.time,
+        slotKey: getSlotKey(startLabel),
+        startLabel,
+        endLabel
+      };
+    })
+  );
+
+  const getClassForSlot = (day: string, slotStart: string) =>
+    routineData.find((item) => item.day === day && item.slotKey === slotStart);
+
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
   return (
     <DashboardLayout title="Timetable">
-      <div className="p-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0C2B4E]">Class Schedule | {getCurrentSemester()}</h1>
-          <p className="text-gray-600 mt-2">Your weekly class timetable</p>
+      <div className="space-y-6">
+        {/* Header Panel */}
+        <div className="bg-gradient-to-r from-[#0C2B4E] to-[#1A3D64] rounded-xl p-6 text-white">
+          <div className="flex items-center gap-4">
+            <CalendarDays size={40} className="text-blue-300 flex-shrink-0" />
+            <div>
+              <h1 className="text-3xl font-bold mb-1">Class Schedule</h1>
+              <p className="text-blue-100">Weekly routine for {getCurrentSemester()}</p>
+            </div>
+          </div>
         </div>
 
-        {/* Weekly Schedule Grid */}
-        <div className="grid grid-cols-5 gap-4">
-          {schedule.map((daySchedule, dayIndex) => (
-            <div key={dayIndex} className="flex flex-col">
-              {/* Day Header */}
-              <div className="bg-[#0C2B4E] text-white rounded-t-lg p-4 text-center">
-                <div className="font-semibold text-lg">{daySchedule.day}</div>
-                <div className="text-sm opacity-90">{daySchedule.date}</div>
-              </div>
-
-              {/* Classes for the day */}
-              <div className="space-y-3 mt-3">
-                {daySchedule.classes.map((classItem, classIndex) => (
-                  <div
-                    key={classIndex}
-                      className={`${getCourseColor(classItem.courseCode)} border-l-4 rounded-lg p-4 hover:shadow-md transition-shadow`}
-                  >
-                    {/* Course Name & Code */}
-                    <div className="mb-3">
-                      <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1">
-                        {classItem.course} | {classItem.courseCode}
-                      </h3>
-                    </div>
-
-                    {/* Time */}
-                    <div className="flex items-center gap-2 text-xs text-gray-700 mb-2">
-                      <Clock size={14} />
-                      <span>{classItem.time}</span>
-                    </div>
-
-                    {/* Room */}
-                    <div className="flex items-center gap-2 text-xs text-gray-700 mb-2">
-                      <MapPin size={14} />
-                      <span>{classItem.room} | {classItem.roomCode}</span>
-                    </div>
-
-                    {/* Instructor */}
-                    <div className="text-xs text-gray-700 mt-2 pt-2 border-t border-gray-300">
-                      {classItem.instructor}
-                      {classItem.instructorCode && ` | ${classItem.instructorCode}`}
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Weekly Routine Table */}
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Weekly Routine</h2>
             </div>
-          ))}
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-semibold">Break</span>
+              <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 font-semibold">Current Slot</span>
+              <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-600 font-semibold">Free</span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-gray-200">
+            <table className="min-w-[980px] w-full border-collapse">
+              <thead>
+                <tr className="bg-gradient-to-r from-[#0C2B4E] to-[#1A3D64] text-white">
+                  <th className="text-left text-sm font-semibold px-4 py-3">Day</th>
+                  {timeSlots.map((slot) => (
+                    <th key={slot.start} className="text-left text-sm font-semibold px-4 py-3">
+                      {slot.isBreak ? 'Break' : formatRange(slot.start, slot.end)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {daysOfWeek.map((day, index) => {
+                  const isSelectedDay = day === todayName;
+                  return (
+                    <tr key={day} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className={`px-4 py-4 text-sm font-bold ${isSelectedDay ? 'text-[#0C2B4E]' : 'text-gray-700'}`}>
+                        {day}
+                      </td>
+                      {timeSlots.map((slot) => {
+                        if (slot.isBreak) {
+                          return (
+                            <td key={`${day}-${slot.start}`} className="px-4 py-4">
+                              <div className="rounded-lg bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-2 text-center">
+                                01:00 PM - 02:00 PM
+                              </div>
+                            </td>
+                          );
+                        }
+
+                        const classItem = getClassForSlot(day, slot.start);
+                        const isNow = isSelectedDay && isCurrentSlot(slot.start, slot.end);
+
+                        if (!classItem) {
+                          return (
+                            <td key={`${day}-${slot.start}`} className="px-4 py-4">
+                              <div className={`rounded-lg border border-dashed border-gray-200 text-gray-400 text-xs font-semibold px-3 py-2 text-center ${isNow ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50'}`}>
+                                Free
+                              </div>
+                            </td>
+                          );
+                        }
+
+                        const colorStyle = getCourseStyle(classItem.courseCode);
+                        return (
+                          <td key={`${day}-${slot.start}`} className="px-4 py-4">
+                            <div className={`rounded-lg border px-3 py-3 shadow-sm ${colorStyle} ${isNow ? 'ring-2 ring-green-300' : ''}`}>
+                              <p className="text-sm font-bold">{classItem.courseCode}</p>
+                              <p className="text-xs mt-1">Room {classItem.room}</p>
+                              <p className="text-xs mt-1">{classItem.instructor}</p>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </DashboardLayout>

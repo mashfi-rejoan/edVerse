@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Camera, AlertCircle, CheckCircle } from 'lucide-react';
-import AdminDashboardLayout from '../../components/AdminDashboardLayout';
 import adminService from '../../services/adminService';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
@@ -84,11 +83,18 @@ const AdminProfile: React.FC = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner fullScreen />;
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <LoadingSpinner text="Loading profile..." />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AdminDashboardLayout>
-      <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6">
         {/* Page Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center gap-4 mb-6">
@@ -184,7 +190,6 @@ const AdminProfile: React.FC = () => {
           </div>
         </div>
       </div>
-    </AdminDashboardLayout>
   );
 };
 

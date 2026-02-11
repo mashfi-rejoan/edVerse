@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { BookOpen, User, Mail, FileText, Link as LinkIcon } from 'lucide-react';
+import { BookOpen, FileText, Link as LinkIcon } from 'lucide-react';
 import axios from 'axios';
 import { apiUrl } from '../../utils/apiBase';
 
@@ -64,17 +64,21 @@ const Courses = () => {
     }
   };
 
-  const handleMessageTeacher = (course: EnrolledCourse) => {
-    alert(`Message feature coming soon!\n\nYou will be able to email ${course.instructorName || 'the instructor'} at ${course.instructorEmail || 'their email'}`);
-  };
 
   return (
     <DashboardLayout title="My Courses">
       <div className="p-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0C2B4E]">My Courses</h1>
-          <p className="text-gray-600 mt-2">View your enrolled courses, instructors, and course materials</p>
+          <div className="bg-gradient-to-br from-[#0C2B4E] via-[#1A3D64] to-[#1D546C] rounded-2xl p-6 shadow-lg text-white">
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-8 h-8" />
+              <div>
+                <h1 className="text-3xl font-bold">My Courses</h1>
+                <p className="text-white/80 mt-1">View your enrolled courses and course materials</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Loading State */}
@@ -185,52 +189,6 @@ const Courses = () => {
                             </svg>
                             {selectedCourse.semester} {selectedCourse.year}
                           </span>
-                        </div>
-                      </div>
-
-                      {/* Instructor Card */}
-                      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <div className="flex items-center gap-2 mb-4">
-                          <User className="text-[#1D546C]" size={20} />
-                          <h3 className="text-lg font-semibold text-[#0C2B4E]">Instructor</h3>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-sm text-gray-600">Name</p>
-                            <p className="text-base font-medium text-gray-900">
-                              {selectedCourse.instructorName || 'TBA'}
-                            </p>
-                          </div>
-                          
-                          {selectedCourse.instructorEmail && (
-                            <div>
-                              <p className="text-sm text-gray-600">Email</p>
-                              <p className="text-base text-gray-900">{selectedCourse.instructorEmail}</p>
-                            </div>
-                          )}
-                          
-                          {selectedCourse.instructor?.department && (
-                            <div>
-                              <p className="text-sm text-gray-600">Department</p>
-                              <p className="text-base text-gray-900">{selectedCourse.instructor.department}</p>
-                            </div>
-                          )}
-                          
-                          {selectedCourse.instructor?.officeHours && (
-                            <div>
-                              <p className="text-sm text-gray-600">Office Hours</p>
-                              <p className="text-base text-gray-900">{selectedCourse.instructor.officeHours}</p>
-                            </div>
-                          )}
-
-                          <button
-                            onClick={() => handleMessageTeacher(selectedCourse)}
-                            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0C2B4E] text-white rounded-lg hover:bg-[#1A3D64] transition font-medium"
-                          >
-                            <Mail size={18} />
-                            Message/Email Instructor
-                          </button>
                         </div>
                       </div>
 

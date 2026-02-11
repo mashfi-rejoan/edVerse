@@ -354,68 +354,81 @@ const BloodDonationTeacher: React.FC = () => {
         )}
         </>
         ) : (
-        <div className="space-y-6 mt-6">
-          {/* Find Blood Donors Section */}
-          {/* Search Section with Blood Type Cards */}
-          <div>
-            <h2 className="text-lg font-bold text-gray-800 mb-4">Select Blood Type</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {/* Individual Blood Types */}
-              {bloodTypes.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setSearchBloodType(type)}
-                  className={`${getBloodTypeColor(type)} rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition transform hover:scale-105 cursor-pointer group ${
-                    searchBloodType === type ? 'ring-2 ring-white' : ''
-                  }`}
-                >
-                  <div className="text-center">
-                    <p className="text-4xl font-bold mb-2 group-hover:scale-110 transition transform">{type}</p>
-                    <p className="text-sm font-medium opacity-90">{type.includes('+') ? 'Rh Positive' : 'Rh Negative'}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Find Blood Donors</h2>
+            <p className="text-sm text-gray-600">Select a blood type to find available donors</p>
           </div>
 
-          {/* Donors List */}
-          {filteredDonors.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredDonors.map((donor) => (
-                <div key={donor._id} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-800">{donor.name}</h3>
-                      <p className="text-gray-600 text-sm">{donor.location}</p>
-                    </div>
-                    <div className={`${getBloodTypeColor(donor.bloodType)} text-white px-3 py-1 rounded-full text-sm font-bold`}>
-                      {donor.bloodType}
-                    </div>
-                  </div>
+          <div className="mb-8">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Select Blood Type</h3>
+            <div className="grid grid-cols-4 gap-3">
+              {bloodTypes.map((type) => {
+                const isPositive = type.includes('+');
+                const baseType = type.replace('+', '').replace('-', '');
+                const rhFactor = isPositive ? 'Positive' : 'Negative';
+                const isSelected = searchBloodType === type;
 
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setSearchBloodType(isSelected ? '' : type)}
+                    className={`relative rounded-lg p-4 transition-all ${
+                      isSelected 
+                        ? 'bg-red-600 ring-4 ring-red-200' 
+                        : 'bg-red-500 hover:bg-red-600'
+                    }`}
+                  >
+                    <div className="text-white text-center">
+                      <div className="text-3xl font-bold mb-1">{baseType}{isPositive ? '+' : '-'}</div>
+                      <div className="text-xs font-medium opacity-90">Rh {rhFactor}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {searchBloodType && (
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  Showing donors with blood type <span className="font-bold text-red-600">{searchBloodType}</span>
+                </p>
+                <button
+                  onClick={() => setSearchBloodType('')}
+                  className="text-sm text-red-600 hover:text-red-700 font-semibold"
+                >
+                  Clear Filter
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredDonors.map((donor) => (
+              <div key={donor._id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="bg-red-600 text-white px-3 py-1 rounded-full font-bold text-sm">
+                        {donor.bloodType}
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-800">{donor.name}</h3>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600 mb-1">
                       <Phone size={16} />
                       <span className="text-sm">{donor.phone}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar size={16} />
-                      <span className="text-sm">Last donated: {formatDate(donor.lastDonated)}</span>
+                      <MapPin size={16} />
+                      <span className="text-sm">{donor.location}</span>
                     </div>
                   </div>
-
-                  <button className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-medium transition">
-                    Contact Donor
-                  </button>
+                  <div className="text-xs text-gray-500">
+                    Last donated: {formatDate(donor.lastDonated)}
+                  </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-              <Droplets size={48} className="mx-auto text-gray-400 mb-3" />
-              <p className="text-gray-600">No donors found with selected blood type</p>
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </div>
         )}
       </div>

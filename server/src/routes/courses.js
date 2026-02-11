@@ -77,14 +77,25 @@ router.get('/student/:studentId/courses', async (req, res) => {
       query.year = queryYear;
     }
     
-    const enrollments = await Enrollment.find(query).populate('course');
+    const enrollments = await Enrollment.find(query).populate({
+      path: 'course',
+      populate: { path: 'instructor', select: 'name email' }
+    });
     
-    const courses = enrollments.map(enrollment => ({
-      ...enrollment.course.toObject(),
-      enrollmentId: enrollment._id,
-      enrollmentStatus: enrollment.status,
-      grade: enrollment.grade || '',
-    }));
+    const courses = enrollments.map(enrollment => {
+      const courseObj = enrollment.course?.toObject ? enrollment.course.toObject() : enrollment.course;
+      const instructorName = courseObj?.instructorName || courseObj?.instructor?.name || '';
+      const instructorEmail = courseObj?.instructor?.email || '';
+
+      return {
+        ...courseObj,
+        instructorName,
+        instructorEmail,
+        enrollmentId: enrollment._id,
+        enrollmentStatus: enrollment.status,
+        grade: enrollment.grade || '',
+      };
+    });
     
     res.json({ courses, semester: querySemester, year: queryYear });
   } catch (error) {

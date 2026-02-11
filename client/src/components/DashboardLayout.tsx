@@ -1,11 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import authService, { User } from '../services/authService';
-import { LogOut, Bell, Home, BookOpen, CalendarDays, BarChart3, ClipboardList, Library, MessageSquare, HeartPulse, Settings, Trophy, UtensilsCrossed, UserCircle } from 'lucide-react';
+import { LogOut, Bell, Home, BookOpen, CalendarDays, BarChart3, ClipboardList, Library, MessageSquare, HeartPulse, Settings, Trophy, UtensilsCrossed, UserCircle, Award } from 'lucide-react';
+import edVerseLogo from '../assets/edverse-wordmark.svg';
+import { apiUrl } from '../utils/apiBase';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   title: string;
+}
+
+interface UpcomingEvent {
+  _id: string;
+  title: string;
+  startDate: string;
+  endDate?: string;
+  category: string;
 }
 
 const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
@@ -14,18 +24,12 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
     localStorage.getItem('studentProfilePhoto')
   );
   const [eventsOpen, setEventsOpen] = useState(false);
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState('');
   const eventsRef = useRef<HTMLDivElement | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-
-  const upcomingEvents = [
-    { title: 'Spring Cultural Night', date: 'Feb 08, 2026', type: 'Cultural Program' },
-    { title: 'Tech Conference 2026', date: 'Feb 18, 2026', type: 'Conference' },
-    { title: '2nd Installment Due', date: 'Feb 12, 2026', type: 'Installment' },
-    { title: 'Midterm Examination', date: 'Feb 13 - Feb 20, 2026', type: 'Exam' },
-    { title: 'Shab-e-Barat Holiday', date: 'Feb 04, 2026', type: 'Holiday' },
-    { title: 'Final Examination', date: 'Apr 23 - Apr 30, 2026', type: 'Exam' },
-  ];
 
   useEffect(() => {
     setUser(authService.getCurrentUser());
@@ -34,6 +38,37 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
     };
     window.addEventListener('profilePhotoUpdated', handlePhotoUpdate);
     return () => window.removeEventListener('profilePhotoUpdated', handlePhotoUpdate);
+  }, []);
+
+  useEffect(() => {
+    const fetchUpcomingEvents = async () => {
+      try {
+        setEventsLoading(true);
+        setEventsError('');
+        const token = authService.getAccessToken();
+        const today = new Date();
+        const end = new Date();
+        end.setDate(end.getDate() + 45);
+
+        const response = await fetch(
+          apiUrl(`/api/calendar/events?from=${today.toISOString().slice(0, 10)}&to=${end.toISOString().slice(0, 10)}`),
+          { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch events');
+        }
+
+        const data = await response.json();
+        setUpcomingEvents(data.data || []);
+      } catch (error) {
+        setEventsError('Unable to load events.');
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+
+    fetchUpcomingEvents();
   }, []);
 
   useEffect(() => {
@@ -54,11 +89,12 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
 
   const navItems = [
     { label: 'Dashboard', href: '/student', icon: <Home size={16} /> },
+    { label: 'Classroom', href: '/student/classroom', icon: <BookOpen size={16} /> },
     { label: 'Registration', href: '/student/courses', icon: <BookOpen size={16} /> },
-    { label: 'Courses', href: '/student/my-courses', icon: <BookOpen size={16} /> },
+    { label: 'Calendar', href: '/student/calendar', icon: <CalendarDays size={16} /> },
     { label: 'Routine', href: '/student/timetable', icon: <CalendarDays size={16} /> },
     { label: 'Attendance', href: '/student/attendance', icon: <BarChart3 size={16} /> },
-    { label: 'Assignments', href: '/student/assignments', icon: <ClipboardList size={16} /> },
+    { label: 'Grades', href: '/student/grades', icon: <Award size={16} /> },
     { label: 'Achieve', href: '/student/achieve', icon: <Trophy size={16} /> },
     { label: 'Library', href: '/student/library', icon: <Library size={16} /> },
     { label: 'Cafeteria', href: '/student/cafeteria', icon: <UtensilsCrossed size={16} /> },
@@ -137,29 +173,31 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
       {/* Main Content Area */}
       <div className="ml-64 h-screen flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="px-8 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <h1 className="text-2xl font-bold text-primary">edVerse</h1>
-              <span className="text-sm text-gray-400 font-medium">{title}</span>
+        <header className="bg-white border-b border-gray-200 shadow-sm h-14">
+          <div className="px-8 h-full grid grid-cols-3 items-center">
+            <div className="flex items-center">
+              <img
+                src={edVerseLogo}
+                alt="edVerse"
+                className="h-12 w-auto"
+              />
             </div>
-            
-            <div className="flex items-center gap-4">
+
+            <div className="justify-self-center" />
+
+            <div className="justify-self-end flex items-center gap-4">
               <button className="relative p-2 hover:bg-gray-100 rounded-full transition">
                 <Bell size={20} className="text-gray-600" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
-              <div className="relative pl-4 border-l border-gray-200" ref={eventsRef}>
+              <div className="relative" ref={eventsRef}>
                 <button
                   onClick={() => setEventsOpen((open) => !open)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-full bg-[#F4F6FA] hover:bg-[#EAF0F7] border border-[#E2E8F0] shadow-sm transition"
+                  className="relative p-2 hover:bg-gray-100 rounded-full transition"
                 >
-                  <div className="w-7 h-7 rounded-full bg-[#0C2B4E]/10 flex items-center justify-center">
-                    <CalendarDays size={16} className="text-[#0C2B4E]" />
-                  </div>
-                  <span className="text-sm font-semibold text-[#0C2B4E]">Events</span>
-                  <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-[#1D546C] rounded-full">
+                  <CalendarDays size={20} className="text-gray-600" />
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-4 h-4 text-[10px] font-semibold text-white bg-[#1D546C] rounded-full">
                     {upcomingEvents.length}
                   </span>
                 </button>
@@ -171,25 +209,48 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
                       <p className="text-xs text-white/80">Admin announcements & academic calendar</p>
                     </div>
                     <div className="max-h-80 overflow-y-auto bg-white">
-                      {upcomingEvents.map((event, index) => (
-                        <div
-                          key={index}
-                          className="px-5 py-4 border-b border-gray-100 last:border-b-0 hover:bg-[#F8FAFC] transition"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <p className="text-sm font-semibold text-gray-900">{event.title}</p>
-                              <p className="text-xs text-gray-500 mt-1">{event.date}</p>
+                      {eventsLoading && (
+                        <p className="px-5 py-4 text-sm text-gray-500">Loading events...</p>
+                      )}
+                      {eventsError && !eventsLoading && (
+                        <p className="px-5 py-4 text-sm text-red-500">{eventsError}</p>
+                      )}
+                      {!eventsLoading && !eventsError && upcomingEvents.length === 0 && (
+                        <p className="px-5 py-4 text-sm text-gray-500">No upcoming events.</p>
+                      )}
+                      {!eventsLoading && !eventsError && upcomingEvents.map((event) => {
+                        const start = new Date(event.startDate);
+                        const end = event.endDate ? new Date(event.endDate) : null;
+                        const dateLabel = end && event.endDate !== event.startDate
+                          ? `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                          : start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                        return (
+                          <div
+                            key={event._id}
+                            className="px-5 py-4 border-b border-gray-100 last:border-b-0 hover:bg-[#F8FAFC] transition"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-gray-900">{event.title}</p>
+                                <p className="text-xs text-gray-500 mt-1">{dateLabel}</p>
+                              </div>
+                              <span className="text-[10px] font-semibold text-[#0C2B4E] bg-[#E7F0FA] px-2 py-1 rounded-full border border-[#D6E4F5]">
+                                {event.category}
+                              </span>
                             </div>
-                            <span className="text-[10px] font-semibold text-[#0C2B4E] bg-[#E7F0FA] px-2 py-1 rounded-full border border-[#D6E4F5]">
-                              {event.type}
-                            </span>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                    <div className="px-5 py-3 bg-[#F8FAFC] text-xs text-gray-500">
-                      Showing {upcomingEvents.length} upcoming items
+                    <div className="px-5 py-3 bg-[#F8FAFC] text-xs text-gray-500 flex items-center justify-between">
+                      <span>Showing {upcomingEvents.length} upcoming items</span>
+                      <button
+                        onClick={() => navigate('/student/calendar')}
+                        className="text-[#1A3D64] font-semibold hover:underline"
+                      >
+                        View Calendar
+                      </button>
                     </div>
                   </div>
                 )}

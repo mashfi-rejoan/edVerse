@@ -38,7 +38,7 @@ const StudentProfile = () => {
     program: 'Bachelor of Science',
     batch: '2024',
     semester: 'Spring 2026',
-    section: 'A',
+    section: '1',
     admissionDate: '2024-01-10',
     cgpa: '3.75',
     completedCredits: '48',

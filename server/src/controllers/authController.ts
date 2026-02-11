@@ -3,54 +3,67 @@ import User from '../models/User';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/auth';
 
-export const register = async (req: Request, res: Response) => {
-  try {
-    const { name, email, universityId, password, role, phone, bloodGroup } = req.body;
+export const register = async (_req: Request, res: Response) => {
+  return res.status(403).json({
+    message: 'Self-registration is disabled. Please contact your admin for account access.'
+  });
+};
 
-    // Validate required fields
-    if (!name || !email || !universityId || !password) {
-      return res.status(400).json({ message: 'Please provide all required fields' });
+const generateDefaultPassword = (phone?: string): string => {
+  if (!phone) return `edverse@${Math.random().toString().slice(2, 8)}`;
+  const digits = phone.replace(/\D/g, '').slice(-6);
+  return `edverse@${digits || Math.random().toString().slice(2, 8)}`;
+};
+
+export const adminCreateUser = async (req: Request, res: Response) => {
+  try {
+    const { name, email, universityId, role, phone, bloodGroup, password } = req.body;
+
+    if (!name || !email || !universityId || !role) {
+      return res.status(400).json({ message: 'Name, email, universityId, and role are required' });
     }
 
-    // Check if user already exists
+    const allowedRoles = ['student', 'teacher', 'moderator', 'cafeteria-manager', 'librarian', 'admin'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
     const existingUser = await User.findOne({ $or: [{ email }, { universityId }] });
     if (existingUser) {
       return res.status(409).json({ message: 'User with this email or university ID already exists' });
     }
 
-    // Create new user
+    const generatedPassword = password || generateDefaultPassword(phone);
+
     const user = new User({
       name,
       email,
       universityId,
-      password,
-      role: role || 'student',
+      password: generatedPassword,
+      role,
       phone,
       bloodGroup: bloodGroup || ''
     });
 
     await user.save();
 
-    // Generate tokens
-    const accessToken = generateAccessToken(user._id.toString());
-    const refreshToken = generateRefreshToken(user._id.toString());
-
     res.status(201).json({
-      message: 'User registered successfully',
+      message: 'User created successfully',
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         universityId: user.universityId,
-        role: user.role
+        role: user.role,
+        phone: user.phone,
+        bloodGroup: user.bloodGroup
       },
-      accessToken,
-      refreshToken
+      temporaryPassword: generatedPassword
     });
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error('Register error:', error);
-    res.status(500).json({ message: 'Server error during registration' });
+    console.error('Admin create user error:', error);
+    res.status(500).json({ message: 'Server error while creating user' });
   }
 };
 

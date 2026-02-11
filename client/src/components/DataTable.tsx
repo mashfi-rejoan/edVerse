@@ -6,6 +6,7 @@ interface Column {
   label: string;
   sortable?: boolean;
   width?: string;
+  render?: (value: any, item: any) => React.ReactNode;
 }
 
 interface Action {
@@ -158,7 +159,7 @@ const DataTable: React.FC<DataTableProps> = ({
               >
                 {columns.map((column) => (
                   <td key={column.key} className="px-6 py-4 text-sm text-gray-700">
-                    {item[column.key]}
+                    {column.render ? column.render(item[column.key], item) : item[column.key]}
                   </td>
                 ))}
                 {actions && (

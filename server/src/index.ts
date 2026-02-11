@@ -52,6 +52,7 @@ const courseRoutes = require('./routes/courses.js');
 const marksRoutes = require('./routes/marks.js');
 const classroomRoutes = require('./routes/classroom.js');
 const roomBookingRoutes = require('./routes/roomBooking.js');
+const calendarRoutes = require('./routes/calendar.js');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -67,6 +68,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/marks', marksRoutes);
 app.use('/api/classroom', classroomRoutes);
 app.use('/api/room-booking', roomBookingRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });

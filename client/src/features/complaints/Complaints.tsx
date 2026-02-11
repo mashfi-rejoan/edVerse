@@ -17,6 +17,7 @@ interface Complaint {
 const COMPLAINT_CATEGORIES = [
   'Academic',
   'Facility',
+  'Lost and Found',
   'Faculty',
   'Administration',
   'Technical',
@@ -30,6 +31,7 @@ const Complaints = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Academic');
+  const [identityMode, setIdentityMode] = useState<'normal' | 'anonymous'>('normal');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -65,7 +67,8 @@ const Complaints = () => {
           title,
           description,
           category,
-          createdBy: user?.id
+          isAnonymous: identityMode === 'anonymous',
+          createdBy: identityMode === 'anonymous' ? undefined : user?.id
         })
       });
 
@@ -76,6 +79,7 @@ const Complaints = () => {
         setTitle('');
         setDescription('');
         setCategory('Academic');
+        setIdentityMode('normal');
         alert('Complaint submitted successfully!');
       } else {
         throw new Error('Failed to submit complaint');
@@ -118,7 +122,15 @@ const Complaints = () => {
   return (
     <DashboardLayout title="Complaints">
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-800">Submit & Track Complaints</h1>
+        <div className="bg-gradient-to-br from-[#0C2B4E] via-[#1A3D64] to-[#1D546C] rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex items-center gap-3">
+            <MessageSquare className="w-8 h-8" />
+            <div>
+              <h1 className="text-3xl font-bold">Submit & Track Complaints</h1>
+              <p className="text-white/80 mt-1">Report issues and follow updates</p>
+            </div>
+          </div>
+        </div>
 
         {/* Submit Complaint Form */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -127,22 +139,38 @@ const Complaints = () => {
             Submit a Complaint
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              >
-                {COMPLAINT_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  {COMPLAINT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Identity
+                </label>
+                <select
+                  value={identityMode}
+                  onChange={(e) => setIdentityMode(e.target.value as 'normal' | 'anonymous')}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="normal">Use my identity</option>
+                  <option value="anonymous">Submit anonymously</option>
+                </select>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

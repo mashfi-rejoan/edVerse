@@ -18,7 +18,7 @@ const mockTeacherData = {
     {
       courseCode: 'CS201',
       courseName: 'Data Structures',
-      sections: ['A', 'B'],
+      sections: ['1', '2'],
       totalStudents: 120,
       credits: 3,
       semester: 'Spring 2026'
@@ -26,7 +26,7 @@ const mockTeacherData = {
     {
       courseCode: 'CS210',
       courseName: 'Database Systems',
-      sections: ['A'],
+      sections: ['1'],
       totalStudents: 60,
       credits: 3,
       semester: 'Spring 2026'
@@ -34,19 +34,19 @@ const mockTeacherData = {
     {
       courseCode: 'CS301',
       courseName: 'Software Engineering',
-      sections: ['A'],
+      sections: ['1'],
       totalStudents: 45,
       credits: 3,
       semester: 'Spring 2026'
     }
   ],
   todayClasses: [
-    { time: '09:00 AM', courseCode: 'CS201', courseName: 'Data Structures', section: 'A', room: 'Room 204', type: 'Lecture' },
-    { time: '11:00 AM', courseCode: 'CS210', courseName: 'Database Systems', section: 'A', room: 'Lab-3', type: 'Lab' },
-    { time: '02:00 PM', courseCode: 'CS301', courseName: 'Software Engineering', section: 'A', room: 'Room 305', type: 'Lecture' }
+    { time: '09:00 AM', courseCode: 'CS201', courseName: 'Data Structures', section: '1', room: 'Room 204', type: 'Lecture' },
+    { time: '11:00 AM', courseCode: 'CS210', courseName: 'Database Systems', section: '1', room: 'Lab-3', type: 'Lab' },
+    { time: '02:00 PM', courseCode: 'CS301', courseName: 'Software Engineering', section: '1', room: 'Room 305', type: 'Lecture' }
   ],
   recentActivity: [
-    { action: 'Marked attendance', detail: 'CS201 - Section A (45/48 present)', time: '2 hours ago' },
+    { action: 'Marked attendance', detail: 'CS201 - Section 1 (45/48 present)', time: '2 hours ago' },
     { action: 'Posted assignment', detail: 'Database Normalization - CS210', time: '5 hours ago' },
     { action: 'Entered marks', detail: 'Quiz 2 - CS301 (45 students)', time: '1 day ago' }
   ],

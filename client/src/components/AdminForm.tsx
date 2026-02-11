@@ -4,12 +4,14 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 export interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'email' | 'password' | 'number' | 'textarea' | 'select' | 'date';
+  type: 'text' | 'email' | 'password' | 'number' | 'textarea' | 'select' | 'multiselect' | 'date';
   placeholder?: string;
   required?: boolean;
   validation?: (value: any) => string | null;
   options?: { label: string; value: string }[];
   defaultValue?: string;
+  fullWidth?: boolean;
+  disabled?: boolean;
 }
 
 interface AdminFormProps {
@@ -38,6 +40,14 @@ const AdminForm: React.FC<AdminFormProps> = ({
   const [touched, setTouched] = React.useState<Record<string, boolean>>({});
 
   const validateField = (field: FormField, value: any) => {
+    if (field.required) {
+      if (Array.isArray(value) && value.length === 0) {
+        return `${field.label} is required`;
+      }
+      if (!Array.isArray(value) && !value) {
+        return `${field.label} is required`;
+      }
+    }
     if (field.required && !value) {
       return `${field.label} is required`;
     }
@@ -48,7 +58,11 @@ const AdminForm: React.FC<AdminFormProps> = ({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    const value =
+      e.target instanceof HTMLSelectElement && e.target.multiple
+        ? Array.from(e.target.selectedOptions).map((opt) => opt.value)
+        : e.target.value;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     // Validate on change if field has been touched
@@ -108,13 +122,13 @@ const AdminForm: React.FC<AdminFormProps> = ({
     const isError = isTouched && error;
     const isValid = isTouched && !error && value;
 
-    const baseInputClasses = `w-full px-4 py-3 rounded-lg border-2 transition-all focus:outline-none text-base ${
+    const baseInputClasses = `w-full px-4 py-3 rounded-xl border-2 transition-all focus:outline-none text-sm shadow-sm ${
       isError
         ? 'border-red-300 bg-red-50 focus:border-red-500 focus:bg-white'
         : isValid
         ? 'border-green-300 bg-green-50 focus:border-green-500 focus:bg-white'
-        : 'border-gray-200 bg-white focus:border-blue-500 hover:border-gray-300'
-    }`;
+        : 'border-slate-200 bg-slate-50 focus:border-blue-500 focus:bg-white hover:border-slate-300'
+    } ${field.disabled ? 'opacity-60 cursor-not-allowed' : ''}`;
 
     switch (field.type) {
       case 'textarea':
@@ -126,6 +140,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
             onChange={handleChange}
             onBlur={handleBlur}
             rows={4}
+            disabled={field.disabled}
             className={baseInputClasses}
           />
         );
@@ -136,9 +151,28 @@ const AdminForm: React.FC<AdminFormProps> = ({
             value={value}
             onChange={handleChange}
             onBlur={handleBlur}
+            disabled={field.disabled}
             className={`${baseInputClasses} cursor-pointer appearance-none`}
           >
             <option value="">Select {field.label}</option>
+            {field.options?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        );
+      case 'multiselect':
+        return (
+          <select
+            name={field.name}
+            value={Array.isArray(value) ? value : []}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            multiple
+            disabled={field.disabled}
+            className={`${baseInputClasses} cursor-pointer appearance-none min-h-[120px]`}
+          >
             {field.options?.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
@@ -156,6 +190,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
               value={value}
               onChange={handleChange}
               onBlur={handleBlur}
+              disabled={field.disabled}
               className={baseInputClasses}
             />
             {isValid && field.type !== 'password' && (
@@ -168,27 +203,30 @@ const AdminForm: React.FC<AdminFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {fields.map((field) => {
-        const error = errors[field.name];
-        const isTouched = touched[field.name];
-        const isError = isTouched && error;
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {fields.map((field) => {
+          const error = errors[field.name];
+          const isTouched = touched[field.name];
+          const isError = isTouched && error;
+          const spanClass = field.fullWidth || field.type === 'textarea' ? 'md:col-span-2' : '';
 
-        return (
-          <div key={field.name} className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-            </label>
-            {renderField(field)}
-            {isError && (
-              <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
-                <AlertCircle size={16} />
-                {error}
-              </div>
-            )}
-          </div>
-        );
-      })}
+          return (
+            <div key={field.name} className={`space-y-2 ${spanClass}`}>
+              <label className="block text-sm font-semibold text-slate-700">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              {renderField(field)}
+              {isError && (
+                <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+                  <AlertCircle size={16} />
+                  {error}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       <div className="flex gap-3 pt-8 border-t border-gray-200">
         {onCancel && (

@@ -107,19 +107,27 @@ const Attendance = () => {
   return (
     <DashboardLayout title="Attendance">
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Attendance Record</h1>
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Semester:</label>
-            <select
-              value={selectedSemester}
-              onChange={(e) => setSelectedSemester(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0C2B4E] focus:border-transparent"
-            >
-              <option value="Spring 2026">Spring 2026</option>
-              <option value="Fall 2025">Fall 2025</option>
-              <option value="Spring 2025">Spring 2025</option>
-            </select>
+        <div className="bg-gradient-to-br from-[#0C2B4E] via-[#1A3D64] to-[#1D546C] rounded-2xl p-6 shadow-lg text-white">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-8 h-8" />
+              <div>
+                <h1 className="text-3xl font-bold">Attendance Record</h1>
+                <p className="text-white/80 mt-1">Track your attendance by semester</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3 py-2">
+              <label className="text-sm font-medium text-white/80">Semester:</label>
+              <select
+                value={selectedSemester}
+                onChange={(e) => setSelectedSemester(e.target.value)}
+                className="bg-transparent text-white text-sm font-semibold focus:outline-none"
+              >
+                <option value="Spring 2026">Spring 2026</option>
+                <option value="Fall 2025">Fall 2025</option>
+                <option value="Spring 2025">Spring 2025</option>
+              </select>
+            </div>
           </div>
         </div>
 

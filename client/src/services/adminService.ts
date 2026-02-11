@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { apiUrl } from '../utils/apiBase';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -14,7 +13,7 @@ class AdminService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: `${API_BASE_URL}/admin`,
+      baseURL: apiUrl('/api/admin'),
       headers: {
         'Content-Type': 'application/json'
       }
@@ -22,9 +21,9 @@ class AdminService {
 
     // Add request interceptor to include token
     this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const accessToken = localStorage.getItem('accessToken');
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
       }
       return config;
     });
@@ -34,10 +33,9 @@ class AdminService {
       (response) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
-          // Token expired, redirect to login
-          localStorage.removeItem('token');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
-          window.location.href = '/';
         }
         return Promise.reject(error);
       }
