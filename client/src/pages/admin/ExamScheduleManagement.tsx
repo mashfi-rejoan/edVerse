@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import AdminModal from '../../components/AdminModal';
 import DataTable from '../../components/DataTable';
-import { CalendarCheck, FileText, Plus, Wand2, Upload, Download } from 'lucide-react';
+import { CalendarCheck, Plus, Wand2, Upload, Download } from 'lucide-react';
 
 interface ExamSchedule {
   id: string;
@@ -207,7 +207,7 @@ const ExamScheduleManagement: React.FC = () => {
         <PageHeader
           title="Exam Schedule"
           subtitle="Create and manage midterm/final schedules"
-          icon={<FileText size={24} className="text-white" />}
+          icon={<CalendarCheck size={24} className="text-white" />}
           action={{
             label: 'Create Schedule',
             onClick: () => handleOpenForm(),

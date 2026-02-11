@@ -3,7 +3,7 @@ import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import AdminModal from '../../components/AdminModal';
 import AdminForm, { FormField } from '../../components/AdminForm';
-import { Plus, Users, Edit, Trash2, Eye, UserX, UserCheck, Upload, Download, Phone, Mail, Calendar, Award, Droplet } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, UserX, UserCheck, Upload, Download, Phone, Mail, Calendar, Award, Droplet } from 'lucide-react';
 import adminService from '../../services/adminService';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
@@ -245,7 +245,7 @@ const TeacherManagement: React.FC = () => {
             },
             variant: 'primary'
           }}
-          icon={<Users size={24} className="text-white" />}
+          icon={<Plus size={24} className="text-white" />}
         />
 
         {/* Bulk Upload Button */}

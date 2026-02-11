@@ -448,7 +448,7 @@ const StudentManagement: React.FC = () => {
             },
             variant: 'primary'
           }}
-          icon={<GraduationCap size={24} className="text-white" />}
+          icon={<Plus size={24} className="text-white" />}
         />
 
         <div className="mt-6 flex flex-wrap gap-3">

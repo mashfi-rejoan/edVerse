@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import AdminForm, { FormField } from '../../components/AdminForm';
 import AdminModal from '../../components/AdminModal';
-import { CalendarCheck, FileEdit, Edit, PlayCircle, PauseCircle, Copy } from 'lucide-react';
+import { CalendarCheck, Edit, PlayCircle, PauseCircle, Copy } from 'lucide-react';
 
 interface RegistrationWindow {
   id: string;
@@ -135,7 +135,7 @@ const RegistrationPortal: React.FC = () => {
         <PageHeader
           title="Registration Portal"
           subtitle="Configure registration windows and policies"
-          icon={<FileEdit size={24} className="text-white" />}
+          icon={<CalendarCheck size={24} className="text-white" />}
           action={{
             label: 'New Window',
             onClick: () => {

@@ -9,21 +9,15 @@ import {
   Users,
   Settings,
   BarChart3,
-  CalendarDays,
-  CalendarRange,
-  CalendarCheck,
-  FileText,
-  GraduationCap,
-  Layers,
+  Calendar,
+  ClipboardList,
+  AlertCircle,
+  Zap,
   MessageSquare,
   DoorOpen,
   Shield,
   Menu,
-  X,
-  FileEdit,
-  ClipboardCheck,
-  Bell,
-  Library
+  X
 } from 'lucide-react';
 
 interface AdminDashboardLayoutProps {
@@ -50,17 +44,17 @@ const AdminDashboardLayout = ({ children, title = 'Admin Panel' }: AdminDashboar
   const navItems = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: <Home size={16} /> },
     { label: 'Teachers', href: '/admin/teachers', icon: <Users size={16} /> },
-    { label: 'Students', href: '/admin/students', icon: <GraduationCap size={16} /> },
-    { label: 'Courses', href: '/admin/courses', icon: <Library size={16} /> },
-    { label: 'Sections', href: '/admin/course-sections', icon: <Layers size={16} /> },
-    { label: 'Routine', href: '/admin/routine', icon: <CalendarDays size={16} /> },
-    { label: 'Academic Calendar', href: '/admin/academic-calendar', icon: <CalendarRange size={16} /> },
-    { label: 'Calendar', href: '/admin/calendar', icon: <CalendarCheck size={16} /> },
-    { label: 'Registration', href: '/admin/registration-settings', icon: <FileEdit size={16} /> },
-    { label: 'Registrations', href: '/admin/registrations', icon: <ClipboardCheck size={16} /> },
-    { label: 'Exams', href: '/admin/exams', icon: <FileText size={16} /> },
+    { label: 'Students', href: '/admin/students', icon: <BookOpen size={16} /> },
+    { label: 'Courses', href: '/admin/courses', icon: <ClipboardList size={16} /> },
+    { label: 'Sections', href: '/admin/course-sections', icon: <Zap size={16} /> },
+    { label: 'Routine', href: '/admin/routine', icon: <Calendar size={16} /> },
+    { label: 'Academic Calendar', href: '/admin/academic-calendar', icon: <Calendar size={16} /> },
+    { label: 'Calendar', href: '/admin/calendar', icon: <Calendar size={16} /> },
+    { label: 'Registration', href: '/admin/registration-settings', icon: <ClipboardList size={16} /> },
+    { label: 'Registrations', href: '/admin/registrations', icon: <BarChart3 size={16} /> },
+    { label: 'Exams', href: '/admin/exams', icon: <AlertCircle size={16} /> },
     { label: 'Complaints', href: '/admin/complaints', icon: <MessageSquare size={16} /> },
-    { label: 'Announcements', href: '/admin/announcements', icon: <Bell size={16} /> },
+    { label: 'Announcements', href: '/admin/announcements', icon: <Zap size={16} /> },
     { label: 'Rooms', href: '/admin/rooms', icon: <DoorOpen size={16} /> },
     { label: 'Reports', href: '/admin/reports', icon: <BarChart3 size={16} /> }
   ];
@@ -118,19 +112,13 @@ const AdminDashboardLayout = ({ children, title = 'Admin Panel' }: AdminDashboar
                   key={item.label}
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
                       ? 'bg-blue-600 text-white font-medium shadow-lg shadow-blue-900/30'
                       : 'text-white/70 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  <span className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all ${
-                    isActive 
-                      ? 'bg-white/20 text-white' 
-                      : 'bg-white/10 text-white/80 group-hover:bg-white/15'
-                  }`}>
-                    {item.icon}
-                  </span>
+                  <span className="flex items-center justify-center w-5 h-5">{item.icon}</span>
                   <span className="text-sm font-medium">{item.label}</span>
                 </Link>
               );

@@ -269,7 +269,7 @@ const ComplaintManagement: React.FC = () => {
         <PageHeader
           title="Complaint Management"
           subtitle="Track, assign, and resolve student & teacher complaints"
-          icon={<MessageSquare size={24} className="text-white" />}
+          icon={<AlertTriangle size={24} className="text-white" />}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
