@@ -111,6 +111,11 @@ edVerse/
    CLIENT_ORIGIN=http://localhost:5173
    ```
 
+   Copy `client/.env.example` to `client/.env` and update:
+   ```env
+   VITE_API_URL=http://localhost:4000
+   ```
+
 4. **Start MongoDB:**
    
    If using local MongoDB:

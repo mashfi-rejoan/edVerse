@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import AdminModal from '../../components/AdminModal';
 import { Eye, Users, UserPlus, Edit, AlertTriangle } from 'lucide-react';
+import adminService from '../../services/adminService';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 interface SectionRecord {
   id: string;
@@ -32,45 +34,10 @@ interface StudentRecord {
 }
 
 const SectionManagement: React.FC = () => {
-  const [sections, setSections] = useState<SectionRecord[]>([
-    {
-      id: '1',
-      courseCode: 'CSE201',
-      courseName: 'Data Structures',
-      section: '1',
-      assignedTeacher: 'Dr. Ahmed Khan',
-      enrolledCount: 42,
-      capacity: 45,
-      status: 'Active'
-    },
-    {
-      id: '2',
-      courseCode: 'CSE201',
-      courseName: 'Data Structures',
-      section: '2',
-      assignedTeacher: null,
-      enrolledCount: 0,
-      capacity: 45,
-      status: 'Closed'
-    },
-    {
-      id: '3',
-      courseCode: 'CSE305',
-      courseName: 'Operating Systems',
-      section: '1',
-      assignedTeacher: 'Prof. Fatima Ali',
-      enrolledCount: 45,
-      capacity: 45,
-      status: 'Full'
-    }
-  ]);
-
-  const [teachers] = useState<TeacherRecord[]>([
-    { id: 't1', name: 'Dr. Ahmed Khan', designation: 'Professor', workload: 3 },
-    { id: 't2', name: 'Prof. Fatima Ali', designation: 'Associate Professor', workload: 4 },
-    { id: 't3', name: 'Dr. Karim Rahman', designation: 'Assistant Professor', workload: 2 }
-  ]);
-
+  const [sections, setSections] = useState<SectionRecord[]>([]);
+  const [teachers, setTeachers] = useState<TeacherRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedSection, setSelectedSection] = useState<SectionRecord | null>(null);
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
   const [capacityValue, setCapacityValue] = useState<number>(45);
@@ -78,16 +45,56 @@ const SectionManagement: React.FC = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showStudentsModal, setShowStudentsModal] = useState(false);
   const [showCapacityModal, setShowCapacityModal] = useState(false);
+  const [sectionStudents, setSectionStudents] = useState<StudentRecord[]>([]);
 
-  const studentsBySection: Record<string, StudentRecord[]> = {
-    '1': [
-      { id: 's1', name: 'Muhammad Ali', email: 'ali@student.edu.bd', studentId: 'CSE21001', registeredAt: '2026-01-10', grade: 'A' },
-      { id: 's2', name: 'Zainab Khan', email: 'zainab@student.edu.bd', studentId: 'CSE21002', registeredAt: '2026-01-11', grade: 'B+' }
-    ],
-    '2': [],
-    '3': [
-      { id: 's3', name: 'Rafiul Hasan', email: 'rafiul@student.edu.bd', studentId: 'CSE20011', registeredAt: '2026-01-12', grade: 'B' }
-    ]
+  useEffect(() => {
+    const init = async () => {
+      await Promise.all([fetchSections(), fetchTeachers()]);
+    };
+    init();
+  }, []);
+
+  const fetchSections = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getSections();
+      if (response.success) {
+        const sectionRows = (response.data || []).map((section: any) => ({
+          id: section._id,
+          courseCode: section.courseCode,
+          courseName: section.courseCode,
+          section: section.section,
+          assignedTeacher: section.assignedTeacher?.name || null,
+          enrolledCount: section.enrolledStudents?.length || 0,
+          capacity: section.maxCapacity,
+          status: section.status
+        }));
+        setSections(sectionRows);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load sections');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTeachers = async () => {
+    try {
+      const response = await adminService.getTeachers();
+      if (response.success) {
+        const teacherRows = (response.data?.teachers || []).map((teacher: any) => ({
+          id: teacher._id,
+          name: teacher.name,
+          designation: teacher.designation,
+          workload: teacher.assignedCourses?.length || 0
+        }));
+        setTeachers(teacherRows);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load teachers');
+    }
   };
 
   const filteredSections = useMemo(() => {
@@ -104,9 +111,25 @@ const SectionManagement: React.FC = () => {
     setShowAssignModal(true);
   };
 
-  const handleViewStudents = (section: SectionRecord) => {
+  const handleViewStudents = async (section: SectionRecord) => {
     setSelectedSection(section);
-    setShowStudentsModal(true);
+    try {
+      const response = await adminService.getSectionStudents(section.id);
+      if (response.success) {
+        const students = (response.data || []).map((student: any) => ({
+          id: student._id,
+          name: student.name,
+          email: student.email,
+          studentId: student.universityId,
+          registeredAt: student.createdAt ? new Date(student.createdAt).toISOString().slice(0, 10) : ''
+        }));
+        setSectionStudents(students);
+        setShowStudentsModal(true);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load students');
+    }
   };
 
   const handleEditCapacity = (section: SectionRecord) => {
@@ -115,7 +138,7 @@ const SectionManagement: React.FC = () => {
     setShowCapacityModal(true);
   };
 
-  const handleConfirmAssign = () => {
+  const handleConfirmAssign = async () => {
     if (!selectedSection) return;
     const teacher = teachers.find((t) => t.id === selectedTeacherId);
     if (!teacher) return;
@@ -125,26 +148,38 @@ const SectionManagement: React.FC = () => {
       return;
     }
 
-    setSections((prev) =>
-      prev.map((item) =>
-        item.id === selectedSection.id ? { ...item, assignedTeacher: teacher.name } : item
-      )
-    );
-    setShowAssignModal(false);
+    try {
+      const response = await adminService.updateSection(selectedSection.id, {
+        assignedTeacher: teacher.id
+      });
+      if (response.success) {
+        await fetchSections();
+        setShowAssignModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to assign teacher');
+    }
   };
 
-  const handleConfirmCapacity = () => {
+  const handleConfirmCapacity = async () => {
     if (!selectedSection) return;
     if (capacityValue < selectedSection.enrolledCount) {
       alert('New capacity cannot be lower than current enrolled students.');
       return;
     }
-    setSections((prev) =>
-      prev.map((item) =>
-        item.id === selectedSection.id ? { ...item, capacity: capacityValue } : item
-      )
-    );
-    setShowCapacityModal(false);
+    try {
+      const response = await adminService.updateSection(selectedSection.id, {
+        maxCapacity: capacityValue
+      });
+      if (response.success) {
+        await fetchSections();
+        setShowCapacityModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to update capacity');
+    }
   };
 
   const columns = [
@@ -180,6 +215,16 @@ const SectionManagement: React.FC = () => {
     { label: 'Capacity', onClick: handleEditCapacity, color: 'red' as const, icon: <Edit size={18} /> }
   ];
 
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <LoadingSpinner text="Loading sections..." />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
         <PageHeader
@@ -187,6 +232,12 @@ const SectionManagement: React.FC = () => {
           subtitle="Assign teachers, manage capacity, and view enrollments"
           icon={<Users size={24} className="text-white" />}
         />
+
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <select
@@ -283,7 +334,7 @@ const SectionManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {(studentsBySection[selectedSection.id] || []).map((student) => (
+                    {sectionStudents.map((student) => (
                       <tr key={student.id} className="border-t border-gray-200">
                         <td className="px-4 py-2">
                           <div>
@@ -296,7 +347,7 @@ const SectionManagement: React.FC = () => {
                         <td className="px-4 py-2 text-gray-700">{student.grade || 'N/A'}</td>
                       </tr>
                     ))}
-                    {(studentsBySection[selectedSection.id] || []).length === 0 && (
+                    {sectionStudents.length === 0 && (
                       <tr>
                         <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
                           No students enrolled yet.

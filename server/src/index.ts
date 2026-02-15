@@ -2,6 +2,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
+import xss from 'xss-clean';
+import path from 'path';
 import connectDB from './config/database';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
@@ -17,6 +22,8 @@ const { Complaint, Library } = require('./database/schemas.js');
 dotenv.config();
 
 const app = express();
+
+app.set('trust proxy', 1);
 
 // Connect to MongoDB
 connectDB();
@@ -41,8 +48,20 @@ app.use(
     credentials: true
   })
 );
-app.use(express.json());
+app.use(helmet());
+app.use(mongoSanitize());
+app.use(xss());
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false
+  })
+);
+app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Import all routes
 const bloodDonationRoutes = require('./routes/bloodDonation.js');

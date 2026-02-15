@@ -1,7 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import AdminModal from '../../components/AdminModal';
 import { Calendar, Plus, Upload, Download, Printer, AlertTriangle, Clock, MapPin } from 'lucide-react';
+import adminService from '../../services/adminService';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const ROOMS = ['201', '202', '204', '301', 'Lab-1'];
@@ -33,45 +35,18 @@ interface ScheduleEntry {
 const colorPalette = ['bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-amber-600', 'bg-rose-600'];
 
 const RoutineManagement: React.FC = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [routineId, setRoutineId] = useState<string | null>(null);
+  const [routineMeta, setRoutineMeta] = useState({
+    batch: '2024',
+    section: 'A',
+    department: 'CSE',
+    semester: 'Spring',
+    academicYear: '2026'
+  });
   const [activeDay, setActiveDay] = useState('Monday');
-  const [entries, setEntries] = useState<ScheduleEntry[]>([
-    {
-      id: '1',
-      courseCode: 'CSE201',
-      section: '1',
-      teacher: 'Dr. Ahmed Khan',
-      day: 'Monday',
-      startTime: '09:00',
-      endTime: '10:30',
-      room: '201',
-      building: 'Building A',
-      color: colorPalette[0]
-    },
-    {
-      id: '2',
-      courseCode: 'CSE203',
-      section: '2',
-      teacher: 'Prof. Fatima Ali',
-      day: 'Monday',
-      startTime: '11:00',
-      endTime: '12:30',
-      room: '202',
-      building: 'Building A',
-      color: colorPalette[1]
-    },
-    {
-      id: '3',
-      courseCode: 'CSE305',
-      section: '1',
-      teacher: 'Dr. Karim Rahman',
-      day: 'Wednesday',
-      startTime: '10:00',
-      endTime: '12:00',
-      room: 'Lab-1',
-      building: 'Building B',
-      color: colorPalette[2]
-    }
-  ]);
+  const [entries, setEntries] = useState<ScheduleEntry[]>([]);
 
   const [showForm, setShowForm] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
@@ -90,6 +65,79 @@ const RoutineManagement: React.FC = () => {
   const [conflicts, setConflicts] = useState<string[]>([]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [previewRows, setPreviewRows] = useState<Record<string, string>[]>([]);
+
+  useEffect(() => {
+    fetchRoutines();
+  }, []);
+
+  const fetchRoutines = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getRoutines();
+      if (response.success) {
+        const routines = response.data || [];
+        const activeRoutine = routines.find((r: any) => r.status === 'Active') || routines[0];
+        if (activeRoutine) {
+          setRoutineId(activeRoutine._id);
+          setRoutineMeta({
+            batch: activeRoutine.batch,
+            section: activeRoutine.section,
+            department: activeRoutine.department,
+            semester: activeRoutine.semester,
+            academicYear: activeRoutine.academicYear
+          });
+
+          const mappedEntries = (activeRoutine.schedule || []).map((entry: any, index: number) => ({
+            id: `${activeRoutine._id}-${index + 1}`,
+            courseCode: entry.courseCode,
+            section: activeRoutine.section,
+            teacher: entry.teacherName || 'TBD',
+            day: entry.day,
+            startTime: entry.startTime,
+            endTime: entry.endTime,
+            room: entry.room,
+            building: entry.building || 'Building A',
+            color: colorPalette[index % colorPalette.length]
+          }));
+
+          setEntries(mappedEntries);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load routine data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const persistRoutine = async (nextEntries: ScheduleEntry[]) => {
+    const schedule = nextEntries.map((entry) => ({
+      day: entry.day,
+      startTime: entry.startTime,
+      endTime: entry.endTime,
+      courseCode: entry.courseCode,
+      courseName: entry.courseCode,
+      room: entry.room,
+      teacherName: entry.teacher
+    }));
+
+    const payload = {
+      ...routineMeta,
+      schedule,
+      status: 'Active',
+      effectiveFrom: new Date().toISOString()
+    };
+
+    if (routineId) {
+      await adminService.updateRoutine(routineId, payload);
+    } else {
+      const response = await adminService.createRoutine(payload);
+      if (response.success) {
+        setRoutineId(response.data?._id || null);
+      }
+    }
+  };
 
   const entriesForDay = useMemo(() => entries.filter((entry) => entry.day === activeDay), [entries, activeDay]);
 
@@ -174,20 +222,28 @@ const RoutineManagement: React.FC = () => {
     if (issues.length > 0) return;
 
     if (editingId) {
-      setEntries((prev) =>
-        prev.map((entry) =>
-          entry.id === editingId
-            ? { ...entry, ...formData }
-            : entry
-        )
+      const nextEntries = entries.map((entry) =>
+        entry.id === editingId
+          ? { ...entry, ...formData }
+          : entry
       );
+      setEntries(nextEntries);
+      persistRoutine(nextEntries).catch((err) => {
+        console.error(err);
+        setError('Failed to save routine changes');
+      });
     } else {
       const newEntry: ScheduleEntry = {
         id: String(entries.length + 1),
         ...formData,
         color: colorPalette[entries.length % colorPalette.length]
       };
-      setEntries((prev) => [...prev, newEntry]);
+      const nextEntries = [...entries, newEntry];
+      setEntries(nextEntries);
+      persistRoutine(nextEntries).catch((err) => {
+        console.error(err);
+        setError('Failed to save routine changes');
+      });
     }
     setShowForm(false);
   };
@@ -211,6 +267,7 @@ const RoutineManagement: React.FC = () => {
       setPreviewRows([]);
       return;
     }
+
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -248,7 +305,12 @@ const RoutineManagement: React.FC = () => {
       return;
     }
 
-    setEntries((prev) => [...prev, ...newEntries]);
+    const nextEntries = [...entries, ...newEntries];
+    setEntries(nextEntries);
+    persistRoutine(nextEntries).catch((err) => {
+      console.error(err);
+      setError('Failed to save routine changes');
+    });
     setShowBulkUpload(false);
     setUploadFile(null);
     setPreviewRows([]);
@@ -280,6 +342,16 @@ const RoutineManagement: React.FC = () => {
       return acc;
     }, {});
   }, [entries]);
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <LoadingSpinner text="Loading routine..." />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -331,6 +403,12 @@ const RoutineManagement: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
 
         <div className="mt-6 overflow-x-auto border border-gray-200 rounded-xl">
           <table className="w-full text-sm">

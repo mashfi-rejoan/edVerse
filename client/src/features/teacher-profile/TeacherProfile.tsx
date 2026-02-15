@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import TeacherDashboardLayout from '../../components/TeacherDashboardLayout';
 import authService from '../../services/authService';
+import teacherService from '../../services/teacherService';
+import { apiUrl } from '../../utils/apiBase';
 import { 
   UserCircle, 
   Mail, 
@@ -79,19 +81,35 @@ const TeacherProfile = () => {
   });
 
   useEffect(() => {
-    // Load profile photo
-    setProfilePhoto(localStorage.getItem('teacherProfilePhoto'));
-    
-    // Load saved profile data
-    const savedProfile = localStorage.getItem('teacherProfile');
-    if (savedProfile) {
-      const parsed = JSON.parse(savedProfile);
-      setProfileData(prev => ({ ...prev, ...parsed }));
-    }
-    
-    // Listen for profile photo updates
+    const loadProfile = async () => {
+      try {
+        const response = await teacherService.getProfile();
+        if (response.success && response.data) {
+          const teacher = response.data;
+          const userData = teacher.userId || {};
+          setProfileData((prev) => ({
+            ...prev,
+            fullName: userData.name || prev.fullName,
+            teacherId: teacher.universityId || userData.universityId || prev.teacherId,
+            email: userData.email || prev.email,
+            phone: userData.phone || prev.phone,
+            bloodGroup: teacher.bloodGroup || prev.bloodGroup,
+            department: teacher.department || prev.department,
+            designation: teacher.designation || prev.designation,
+            joiningDate: teacher.dateOfJoining || prev.joiningDate
+          }));
+          setProfilePhoto(userData.photoUrl ? apiUrl(userData.photoUrl) : null);
+        }
+      } catch (error) {
+        console.error('Failed to load teacher profile:', error);
+      }
+    };
+
+    loadProfile();
+
     const handlePhotoUpdate = () => {
-      setProfilePhoto(localStorage.getItem('teacherProfilePhoto'));
+      const updatedUser = authService.getCurrentUser();
+      setProfilePhoto(updatedUser?.photoUrl ? apiUrl(updatedUser.photoUrl) : null);
     };
     window.addEventListener('profilePhotoUpdated', handlePhotoUpdate);
     return () => window.removeEventListener('profilePhotoUpdated', handlePhotoUpdate);

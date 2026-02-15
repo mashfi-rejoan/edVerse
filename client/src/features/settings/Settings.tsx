@@ -1,14 +1,14 @@
 import { useRef, useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import authService from '../../services/authService';
+import studentService from '../../services/studentService';
 import { User, Mail, Phone, Lock } from 'lucide-react';
+import { apiUrl } from '../../utils/apiBase';
 
 const Settings = () => {
   const user = authService.getCurrentUser();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(
-    localStorage.getItem('studentProfilePhoto')
-  );
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   
   const [profile, setProfile] = useState({
     email: user?.email || '',
@@ -25,42 +25,50 @@ const Settings = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    const savedProfile = localStorage.getItem('studentProfile');
-    if (savedProfile) {
+    const fetchProfile = async () => {
       try {
-        const parsed = JSON.parse(savedProfile);
-        setProfile({
-          email: parsed.email || user?.email || '',
-          phone: parsed.phone || ''
-        });
-      } catch {
-        setProfile({ email: user?.email || '', phone: '' });
+        const response = await studentService.getProfile();
+        if (response.success && response.data) {
+          const student = response.data;
+          const userData = student.userId || {};
+          setProfile({
+            email: userData.email || user?.email || '',
+            phone: userData.phone || ''
+          });
+          setProfilePhoto(userData.photoUrl ? apiUrl(userData.photoUrl) : null);
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error);
       }
-    }
+    };
+
+    fetchProfile();
   }, [user?.email]);
 
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
     
     try {
-      // Save profile data to localStorage
-      localStorage.setItem('studentProfile', JSON.stringify(profile));
-      const existingUser = localStorage.getItem('user');
-      if (existingUser) {
-        try {
-          const parsedUser = JSON.parse(existingUser);
+      const response = await studentService.updateProfile({
+        email: profile.email,
+        phone: profile.phone
+      });
+
+      if (response.success && response.data?.userId) {
+        const updatedUser = response.data.userId;
+        const currentUser = authService.getCurrentUser();
+        if (currentUser) {
           localStorage.setItem(
             'user',
             JSON.stringify({
-              ...parsedUser,
-              email: profile.email,
-              phone: profile.phone
+              ...currentUser,
+              email: updatedUser.email,
+              phone: updatedUser.phone,
+              photoUrl: updatedUser.photoUrl || currentUser.photoUrl
             })
           );
-        } catch {
-          // Ignore invalid user data
         }
       }
       setSuccessMessage('Profile updated successfully!');
@@ -70,7 +78,7 @@ const Settings = () => {
     }
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
@@ -86,11 +94,10 @@ const Settings = () => {
     }
 
     try {
-      // In production, this would call an API
-      // For now, we'll save a hashed version to localStorage
-      const passwordHash = btoa(passwordData.newPassword); // Simple encoding for demo
-      localStorage.setItem('studentPasswordHash', passwordHash);
-      
+      await studentService.changePassword({
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
       setSuccessMessage('Password changed successfully!');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -99,7 +106,7 @@ const Settings = () => {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -117,20 +124,34 @@ const Settings = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      localStorage.setItem('studentProfilePhoto', dataUrl);
-      setProfilePhoto(dataUrl);
-      window.dispatchEvent(new Event('profilePhotoUpdated'));
-      setSuccessMessage('Profile photo updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    };
-    reader.onerror = () => {
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const response = await studentService.uploadPhoto(formData);
+      if (response.success && response.data?.photoUrl) {
+        const url = apiUrl(response.data.photoUrl);
+        setProfilePhoto(url);
+        const currentUser = authService.getCurrentUser();
+        if (currentUser) {
+          localStorage.setItem(
+            'user',
+            JSON.stringify({
+              ...currentUser,
+              photoUrl: response.data.photoUrl
+            })
+          );
+        }
+        window.dispatchEvent(new Event('profilePhotoUpdated'));
+        setSuccessMessage('Profile photo updated successfully!');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setErrorMessage('Failed to upload photo. Please try again.');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch (error) {
       setErrorMessage('Failed to upload photo. Please try again.');
       setTimeout(() => setErrorMessage(''), 3000);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   return (

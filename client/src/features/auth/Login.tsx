@@ -14,9 +14,7 @@ const Login = () => {
     setError('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const submitLogin = async () => {
     if (!formData.username || !formData.password) {
       setError('Please fill in all fields');
       return;
@@ -33,8 +31,7 @@ const Login = () => {
     try {
       await authService.login(formData);
       const user = authService.getCurrentUser();
-      
-      // Redirect based on role
+
       if (user) {
         window.location.href = `/${user.role}`;
       }
@@ -44,6 +41,11 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitLogin();
   };
 
   return (
@@ -130,7 +132,11 @@ const Login = () => {
 
             {/* Login Button */}
             <button
-              type="submit"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                submitLogin();
+              }}
               disabled={loading}
               className="w-full py-3.5 rounded-full bg-primary hover:bg-primary-dark active:bg-primary-darker 
                        text-white font-semibold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed

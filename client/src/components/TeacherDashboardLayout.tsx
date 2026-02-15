@@ -44,12 +44,14 @@ const TeacherDashboardLayout = ({ children, title }: TeacherDashboardLayoutProps
   const navigate = useNavigate();
 
   useEffect(() => {
-    setUser(authService.getCurrentUser());
-    setProfilePhoto(localStorage.getItem('teacherProfilePhoto'));
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+    setProfilePhoto(currentUser?.photoUrl ? apiUrl(currentUser.photoUrl) : null);
     
     // Listen for profile photo updates
     const handlePhotoUpdate = () => {
-      setProfilePhoto(localStorage.getItem('teacherProfilePhoto'));
+      const updatedUser = authService.getCurrentUser();
+      setProfilePhoto(updatedUser?.photoUrl ? apiUrl(updatedUser.photoUrl) : null);
     };
     window.addEventListener('profilePhotoUpdated', handlePhotoUpdate);
     return () => window.removeEventListener('profilePhotoUpdated', handlePhotoUpdate);
@@ -120,9 +122,13 @@ const TeacherDashboardLayout = ({ children, title }: TeacherDashboardLayoutProps
       <aside className="fixed left-0 top-0 h-screen w-64 bg-primary text-white shadow-lg flex flex-col">
         <div className="bg-[#0C2B4E] px-4 py-8 flex flex-col items-center border-b border-white/10">
           <div className="w-20 h-20 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center overflow-hidden">
-            <span className="text-2xl font-bold text-white/60">
-              {user?.name?.charAt(0) || 'T'}
-            </span>
+            {profilePhoto ? (
+              <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl font-bold text-white/60">
+                {user?.name?.charAt(0) || 'T'}
+              </span>
+            )}
           </div>
           <h3 className="text-white font-bold text-lg mt-3 text-center">{user?.name || 'Teacher'}</h3>
           <p className="text-white/60 text-sm">{user?.universityId || 'Teacher ID'}</p>

@@ -19,7 +19,7 @@ const courseSchema = new mongoose.Schema({
   semester: { 
     type: String, 
     required: true,
-    enum: ['Spring', 'Summer', 'Fall']
+    enum: ['Spring', 'Fall']
   },
   year: { type: Number, required: true },
   isActive: { type: Boolean, default: true },
@@ -33,7 +33,7 @@ const enrollmentSchema = new mongoose.Schema({
   semester: { 
     type: String, 
     required: true,
-    enum: ['Spring', 'Summer', 'Fall']
+    enum: ['Spring', 'Fall']
   },
   year: { type: Number, required: true },
   grade: { type: String, enum: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F', 'W', 'I', 'P', ''], default: '' },

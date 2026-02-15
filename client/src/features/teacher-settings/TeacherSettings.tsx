@@ -1,14 +1,14 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import TeacherDashboardLayout from '../../components/TeacherDashboardLayout';
 import authService from '../../services/authService';
+import teacherService from '../../services/teacherService';
 import { User, Mail, Phone, Lock } from 'lucide-react';
+import { apiUrl } from '../../utils/apiBase';
 
 const TeacherSettings = () => {
   const user = authService.getCurrentUser();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(
-    localStorage.getItem('teacherProfilePhoto')
-  );
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   
   const [profile, setProfile] = useState({
     name: user?.name || '',
@@ -28,14 +28,60 @@ const TeacherSettings = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await teacherService.getProfile();
+        if (response.success && response.data) {
+          const teacher = response.data;
+          const userData = teacher.userId || {};
+          setProfile((prev) => ({
+            ...prev,
+            name: userData.name || prev.name,
+            email: userData.email || prev.email,
+            phone: userData.phone || prev.phone,
+            teacherId: teacher.universityId || userData.universityId || prev.teacherId,
+            department: teacher.department || prev.department,
+            designation: teacher.designation || prev.designation
+          }));
+          setProfilePhoto(userData.photoUrl ? apiUrl(userData.photoUrl) : null);
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
     
     try {
-      // Save profile data to localStorage
-      localStorage.setItem('teacherProfile', JSON.stringify(profile));
+      const response = await teacherService.updateProfile({
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone
+      });
+
+      if (response.success && response.data?.userId) {
+        const updatedUser = response.data.userId;
+        const currentUser = authService.getCurrentUser();
+        if (currentUser) {
+          localStorage.setItem(
+            'user',
+            JSON.stringify({
+              ...currentUser,
+              name: updatedUser.name,
+              email: updatedUser.email,
+              phone: updatedUser.phone,
+              photoUrl: updatedUser.photoUrl || currentUser.photoUrl
+            })
+          );
+        }
+      }
       setSuccessMessage('Profile updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
@@ -43,7 +89,7 @@ const TeacherSettings = () => {
     }
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
@@ -59,11 +105,10 @@ const TeacherSettings = () => {
     }
 
     try {
-      // In production, this would call an API
-      // For now, we'll save a hashed version to localStorage
-      const passwordHash = btoa(passwordData.newPassword); // Simple encoding for demo
-      localStorage.setItem('teacherPasswordHash', passwordHash);
-      
+      await teacherService.changePassword({
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
       setSuccessMessage('Password changed successfully!');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -72,7 +117,7 @@ const TeacherSettings = () => {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -90,20 +135,34 @@ const TeacherSettings = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      localStorage.setItem('teacherProfilePhoto', dataUrl);
-      setProfilePhoto(dataUrl);
-      window.dispatchEvent(new Event('profilePhotoUpdated'));
-      setSuccessMessage('Profile photo updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    };
-    reader.onerror = () => {
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const response = await teacherService.uploadPhoto(formData);
+      if (response.success && response.data?.photoUrl) {
+        const url = apiUrl(response.data.photoUrl);
+        setProfilePhoto(url);
+        const currentUser = authService.getCurrentUser();
+        if (currentUser) {
+          localStorage.setItem(
+            'user',
+            JSON.stringify({
+              ...currentUser,
+              photoUrl: response.data.photoUrl
+            })
+          );
+        }
+        window.dispatchEvent(new Event('profilePhotoUpdated'));
+        setSuccessMessage('Profile photo updated successfully!');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setErrorMessage('Failed to upload photo. Please try again.');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch (error) {
       setErrorMessage('Failed to upload photo. Please try again.');
       setTimeout(() => setErrorMessage(''), 3000);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   return (

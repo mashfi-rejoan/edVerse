@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from '../models/User';
 import Student from '../models/Student';
-import bcryptjs from 'bcryptjs';
 
 dotenv.config();
 
@@ -43,16 +42,18 @@ export const seedStudents = async () => {
     // Create new students
     let count = 0;
     for (const studentData of students) {
-      const hashedPassword = await bcryptjs.hash(studentData.password, 10);
-      
       const user = await User.create({
         name: studentData.name,
         email: studentData.email,
         universityId: studentData.universityId,
-        password: hashedPassword,
+        password: studentData.password,
         role: 'student',
         isActive: true
       });
+
+      // Ensure password is hashed correctly
+      user.password = studentData.password;
+      await user.save();
 
       await Student.create({
         universityId: studentData.universityId,

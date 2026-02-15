@@ -7,13 +7,13 @@ const baseYear = new Date().getFullYear() - 1;
 
 const termMap = {
   '1-1': { level: 1, term: 1, semester: 'Spring', year: baseYear },
-  '1-2': { level: 1, term: 2, semester: 'Summer', year: baseYear },
-  '2-1': { level: 2, term: 1, semester: 'Fall', year: baseYear },
-  '2-2': { level: 2, term: 2, semester: 'Spring', year: baseYear + 1 },
-  '3-1': { level: 3, term: 1, semester: 'Summer', year: baseYear + 1 },
-  '3-2': { level: 3, term: 2, semester: 'Fall', year: baseYear + 1 },
-  '4-1': { level: 4, term: 1, semester: 'Spring', year: baseYear + 2 },
-  '4-2': { level: 4, term: 2, semester: 'Summer', year: baseYear + 2 }
+  '1-2': { level: 1, term: 2, semester: 'Fall', year: baseYear },
+  '2-1': { level: 2, term: 1, semester: 'Spring', year: baseYear + 1 },
+  '2-2': { level: 2, term: 2, semester: 'Fall', year: baseYear + 1 },
+  '3-1': { level: 3, term: 1, semester: 'Spring', year: baseYear + 2 },
+  '3-2': { level: 3, term: 2, semester: 'Fall', year: baseYear + 2 },
+  '4-1': { level: 4, term: 1, semester: 'Spring', year: baseYear + 3 },
+  '4-2': { level: 4, term: 2, semester: 'Fall', year: baseYear + 3 }
 };
 
 const isLabCourse = (name, credits) => {

@@ -42,7 +42,6 @@ const RegistrationPortal: React.FC = () => {
   const formFields: FormField[] = [
     { name: 'term', label: 'Semester', type: 'select', required: true, options: [
       { label: 'Spring', value: 'Spring' },
-      { label: 'Summer', value: 'Summer' },
       { label: 'Fall', value: 'Fall' }
     ]},
     { name: 'academicYear', label: 'Academic Year', type: 'text', required: true, placeholder: '2026' },

@@ -11,9 +11,31 @@ const complaintSchema = new mongoose.Schema({
     enum: ['Academic', 'Facility', 'Lost and Found', 'Faculty', 'Administration', 'Technical', 'Harassment', 'Other'], 
     default: 'Other'
   },
-  status: { type: String, enum: ['Pending', 'Resolved', 'Withdrawn'], default: 'Pending' },
+  priority: {
+    type: String,
+    enum: ['High', 'Medium', 'Low'],
+    default: 'Medium'
+  },
+  status: {
+    type: String,
+    enum: ['Open', 'In Progress', 'Resolved', 'Withdrawn', 'Pending'],
+    default: 'Open'
+  },
   isAnonymous: { type: Boolean, default: false },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  submittedByName: { type: String },
+  submittedRole: { type: String, enum: ['Student', 'Teacher', 'Staff'], default: 'Student' },
+  assignedTo: { type: String },
+  assignedAt: { type: Date },
+  resolution: { type: String },
+  resolvedAt: { type: Date },
+  comments: [
+    {
+      author: { type: String, required: true },
+      time: { type: Date, default: Date.now },
+      text: { type: String, required: true }
+    }
+  ],
   withdrawnAt: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

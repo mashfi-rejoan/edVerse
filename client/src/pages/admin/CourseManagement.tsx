@@ -529,7 +529,7 @@ const CourseManagement: React.FC = () => {
                   onChange={(e) => setOfferingSemester(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg"
                 >
-                  {['Spring', 'Summer', 'Fall'].map((term) => (
+                  {['Spring', 'Fall'].map((term) => (
                     <option key={term} value={term}>
                       {term}
                     </option>

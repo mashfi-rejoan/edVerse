@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import authService from '../../services/authService';
+import studentService from '../../services/studentService';
+import { apiUrl } from '../../utils/apiBase';
 import { 
   UserCircle, 
   Mail, 
@@ -88,19 +90,38 @@ const StudentProfile = () => {
   });
 
   useEffect(() => {
-    // Load profile photo
-    setProfilePhoto(localStorage.getItem('studentProfilePhoto'));
-    
-    // Load saved profile data
-    const savedProfile = localStorage.getItem('studentProfile');
-    if (savedProfile) {
-      const parsed = JSON.parse(savedProfile);
-      setProfileData(prev => ({ ...prev, ...parsed }));
-    }
-    
-    // Listen for profile photo updates
+    const loadProfile = async () => {
+      try {
+        const response = await studentService.getProfile();
+        if (response.success && response.data) {
+          const student = response.data;
+          const userData = student.userId || {};
+          setProfileData((prev) => ({
+            ...prev,
+            fullName: userData.name || prev.fullName,
+            studentId: student.universityId || userData.universityId || prev.studentId,
+            email: userData.email || prev.email,
+            phone: userData.phone || prev.phone,
+            bloodGroup: student.bloodGroup || prev.bloodGroup,
+            department: student.department || prev.department,
+            batch: student.batch || prev.batch,
+            section: student.section || prev.section,
+            cgpa: student.cgpa?.toString() || prev.cgpa,
+            completedCredits: student.completedCredits?.toString() || prev.completedCredits,
+            admissionDate: student.admissionDate || prev.admissionDate
+          }));
+          setProfilePhoto(userData.photoUrl ? apiUrl(userData.photoUrl) : null);
+        }
+      } catch (error) {
+        console.error('Failed to load student profile:', error);
+      }
+    };
+
+    loadProfile();
+
     const handlePhotoUpdate = () => {
-      setProfilePhoto(localStorage.getItem('studentProfilePhoto'));
+      const updatedUser = authService.getCurrentUser();
+      setProfilePhoto(updatedUser?.photoUrl ? apiUrl(updatedUser.photoUrl) : null);
     };
     window.addEventListener('profilePhotoUpdated', handlePhotoUpdate);
     return () => window.removeEventListener('profilePhotoUpdated', handlePhotoUpdate);

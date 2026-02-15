@@ -196,6 +196,71 @@ class AdminService {
     }
   }
 
+  // Sections
+  async getSections(): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.get('/sections');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async createSection(data: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.post('/sections', data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateSection(id: string, data: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.put(`/sections/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getSectionStudents(id: string): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.get(`/sections/${id}/students`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Routines
+  async getRoutines(): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.get('/routines');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async createRoutine(data: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.post('/routines', data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateRoutine(id: string, data: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.put(`/routines/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Registrations
   async getRegistrations(page?: number, limit?: number): Promise<ApiResponse<any>> {
     try {
@@ -289,6 +354,27 @@ class AdminService {
   async deleteAnnouncement(id: string): Promise<ApiResponse<any>> {
     try {
       const response = await this.api.delete(`/announcements/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Complaints
+  async getComplaints(page?: number, limit?: number): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.get('/complaints', {
+        params: { page, limit }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateComplaint(id: string, data: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.api.put(`/complaints/${id}`, data);
       return response.data;
     } catch (error) {
       throw error;

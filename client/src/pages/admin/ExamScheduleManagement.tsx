@@ -1,69 +1,107 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import AdminModal from '../../components/AdminModal';
 import DataTable from '../../components/DataTable';
 import { CalendarCheck, Plus, Wand2, Upload, Download } from 'lucide-react';
+import adminService from '../../services/adminService';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 interface ExamSchedule {
   id: string;
-  examType: 'Midterm' | 'Final';
+  examType: 'Midterm' | 'Final' | 'Quiz' | 'Assignment';
+  courseCode: string;
+  courseName: string;
+  section: string;
   semester: string;
   academicYear: string;
-  startDate: string;
-  endDate: string;
-  status: 'Draft' | 'Published';
+  date: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+  totalMarks: number;
+  status: 'Scheduled' | 'Ongoing' | 'Completed' | 'Cancelled';
 }
 
 interface ExamScheduleFormState {
   examType: ExamSchedule['examType'];
+  courseCode: string;
+  courseName: string;
+  section: string;
   semester: string;
   academicYear: string;
-  startDate: string;
-  endDate: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+  totalMarks: number;
   status: ExamSchedule['status'];
 }
 
 const ExamScheduleManagement: React.FC = () => {
-  const [schedules, setSchedules] = useState<ExamSchedule[]>([
-    {
-      id: 'EX-001',
-      examType: 'Midterm',
-      semester: 'Spring',
-      academicYear: '2026',
-      startDate: '2026-03-10',
-      endDate: '2026-03-18',
-      status: 'Published'
-    },
-    {
-      id: 'EX-002',
-      examType: 'Final',
-      semester: 'Spring',
-      academicYear: '2026',
-      startDate: '2026-05-08',
-      endDate: '2026-05-18',
-      status: 'Draft'
-    }
-  ]);
+  const [schedules, setSchedules] = useState<ExamSchedule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ExamScheduleFormState>({
     examType: 'Midterm',
+    courseCode: '',
+    courseName: '',
+    section: 'A',
     semester: 'Spring',
     academicYear: '2026',
-    startDate: '',
-    endDate: '',
-    status: 'Draft'
+    date: '',
+    startTime: '09:00',
+    endTime: '12:00',
+    room: 'Room 101',
+    totalMarks: 100,
+    status: 'Scheduled'
   });
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [previewRows, setPreviewRows] = useState<Record<string, string>[]>([]);
 
+  useEffect(() => {
+    fetchExams();
+  }, []);
+
+  const fetchExams = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getExams();
+      if (response.success) {
+        const examRows = (response.data?.exams || []).map((exam: any) => ({
+          id: exam._id,
+          examType: exam.examType,
+          courseCode: exam.courseCode,
+          courseName: exam.courseName,
+          section: exam.section,
+          semester: exam.semester,
+          academicYear: exam.academicYear,
+          date: exam.date ? new Date(exam.date).toISOString().slice(0, 10) : '',
+          startTime: exam.startTime,
+          endTime: exam.endTime,
+          room: exam.room,
+          totalMarks: exam.totalMarks,
+          status: exam.status
+        }));
+        setSchedules(examRows);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load exams');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const scheduleStats = useMemo(() => {
     return {
       total: schedules.length,
-      published: schedules.filter((s) => s.status === 'Published').length,
-      draft: schedules.filter((s) => s.status === 'Draft').length
+      scheduled: schedules.filter((s) => s.status === 'Scheduled').length,
+      ongoing: schedules.filter((s) => s.status === 'Ongoing').length,
+      completed: schedules.filter((s) => s.status === 'Completed').length
     };
   }, [schedules]);
 
@@ -72,50 +110,105 @@ const ExamScheduleManagement: React.FC = () => {
       setEditingId(schedule.id);
       setFormData({
         examType: schedule.examType,
+        courseCode: schedule.courseCode,
+        courseName: schedule.courseName,
+        section: schedule.section,
         semester: schedule.semester,
         academicYear: schedule.academicYear,
-        startDate: schedule.startDate,
-        endDate: schedule.endDate,
+        date: schedule.date,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        room: schedule.room,
+        totalMarks: schedule.totalMarks,
         status: schedule.status
       });
     } else {
       setEditingId(null);
       setFormData({
         examType: 'Midterm',
+        courseCode: '',
+        courseName: '',
+        section: 'A',
         semester: 'Spring',
         academicYear: '2026',
-        startDate: '',
-        endDate: '',
-        status: 'Draft'
+        date: '',
+        startTime: '09:00',
+        endTime: '12:00',
+        room: 'Room 101',
+        totalMarks: 100,
+        status: 'Scheduled'
       });
     }
     setShowModal(true);
   };
 
-  const handleSaveSchedule = () => {
-    if (editingId) {
-      setSchedules((prev) =>
-        prev.map((item) => (item.id === editingId ? { ...item, ...formData } : item))
-      );
-    } else {
-      const newSchedule: ExamSchedule = {
-        id: `EX-${100 + schedules.length + 1}`,
-        ...formData
-      };
-      setSchedules((prev) => [...prev, newSchedule]);
+  const handleSaveSchedule = async () => {
+    try {
+      const resolvedCourseCode =
+        formData.courseCode ||
+        formData.courseName.trim().replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8) ||
+        'SUBJ101';
+      if (editingId) {
+        const response = await adminService.updateExam(editingId, {
+          examType: formData.examType,
+          courseCode: resolvedCourseCode,
+          courseName: formData.courseName,
+          section: formData.section,
+          semester: formData.semester,
+          academicYear: formData.academicYear,
+          date: formData.date,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          duration: 180,
+          room: formData.room,
+          totalMarks: formData.totalMarks,
+          status: formData.status
+        });
+        if (response.success) {
+          await fetchExams();
+        }
+      } else {
+        const response = await adminService.createExam({
+          examType: formData.examType,
+          courseCode: resolvedCourseCode,
+          courseName: formData.courseName,
+          section: formData.section,
+          semester: formData.semester,
+          academicYear: formData.academicYear,
+          date: formData.date,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          duration: 180,
+          room: formData.room,
+          totalMarks: formData.totalMarks,
+          status: formData.status
+        });
+        if (response.success) {
+          await fetchExams();
+        }
+      }
+      setShowModal(false);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to save exam');
     }
-    setShowModal(false);
   };
 
   const handleAutoGenerate = () => {
     const generated: ExamSchedule = {
       id: `EX-${100 + schedules.length + 1}`,
       examType: formData.examType as ExamSchedule['examType'],
+      courseCode: formData.courseCode || 'CSE101',
+      courseName: formData.courseName || 'Sample Course',
+      section: formData.section || 'A',
       semester: formData.semester,
       academicYear: formData.academicYear,
-      startDate: formData.startDate || '2026-03-15',
-      endDate: formData.endDate || '2026-03-22',
-      status: 'Draft'
+      date: formData.date || '2026-03-15',
+      startTime: formData.startTime || '09:00',
+      endTime: formData.endTime || '12:00',
+      room: formData.room || 'Room 101',
+      totalMarks: formData.totalMarks || 100,
+      status: 'Scheduled'
     };
     setSchedules((prev) => [...prev, generated]);
   };
@@ -150,12 +243,18 @@ const ExamScheduleManagement: React.FC = () => {
   const handleBulkUpload = () => {
     const newSchedules: ExamSchedule[] = previewRows.map((row, idx) => ({
       id: `EX-${200 + schedules.length + idx + 1}`,
-      examType: (row.ExamType || row.examType || 'Midterm') as ExamSchedule['examType'],
+      examType: (row.ExamName || row.examName || row.ExamType || row.examType || 'Midterm') as ExamSchedule['examType'],
+      courseCode: row.CourseCode || row.courseCode || 'CSE101',
+      courseName: row.SubjectName || row.subjectName || row.CourseName || row.courseName || 'Course Name',
+      section: row.Section || row.section || 'A',
       semester: row.Semester || row.semester || 'Spring',
       academicYear: row.AcademicYear || row.academicYear || '2026',
-      startDate: row.StartDate || row.startDate || '2026-03-10',
-      endDate: row.EndDate || row.endDate || '2026-03-18',
-      status: (row.Status || row.status || 'Draft') as ExamSchedule['status']
+      date: row.Date || row.date || '2026-03-10',
+      startTime: row.StartTime || row.startTime || '09:00',
+      endTime: row.EndTime || row.endTime || '12:00',
+      room: row.RoomNumber || row.roomNumber || row.Room || row.room || 'Room 101',
+      totalMarks: Number(row.TotalMarks || row.totalMarks || 100),
+      status: (row.Status || row.status || 'Scheduled') as ExamSchedule['status']
     }));
 
     setSchedules((prev) => [...prev, ...newSchedules]);
@@ -166,8 +265,8 @@ const ExamScheduleManagement: React.FC = () => {
 
   const downloadTemplate = () => {
     const csvContent =
-      'ExamType,Semester,AcademicYear,StartDate,EndDate,Status\n' +
-      'Midterm,Spring,2026,2026-03-10,2026-03-18,Published';
+      'ExamName,SubjectName,CourseCode,Section,Semester,AcademicYear,Date,StartTime,EndTime,RoomNumber,TotalMarks,Status\n' +
+      'Midterm,Programming Fundamentals,CSE101,A,Spring,2026,2026-03-10,09:00,12:00,Room 101,100,Scheduled';
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -178,10 +277,13 @@ const ExamScheduleManagement: React.FC = () => {
 
   const columns = [
     { key: 'examType', label: 'Exam Type', sortable: true },
+    { key: 'courseCode', label: 'Course', sortable: true },
+    { key: 'section', label: 'Section', sortable: true },
     { key: 'semester', label: 'Semester', sortable: true },
     { key: 'academicYear', label: 'Year', sortable: true },
-    { key: 'startDate', label: 'Start Date', sortable: true },
-    { key: 'endDate', label: 'End Date', sortable: true },
+    { key: 'date', label: 'Date', sortable: true },
+    { key: 'startTime', label: 'Start', sortable: true },
+    { key: 'endTime', label: 'End', sortable: true },
     {
       key: 'status',
       label: 'Status',
@@ -189,7 +291,13 @@ const ExamScheduleManagement: React.FC = () => {
       render: (value: ExamSchedule['status']) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            value === 'Published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+            value === 'Completed'
+              ? 'bg-green-100 text-green-700'
+              : value === 'Ongoing'
+              ? 'bg-blue-100 text-blue-700'
+              : value === 'Cancelled'
+              ? 'bg-red-100 text-red-700'
+              : 'bg-gray-100 text-gray-600'
           }`}
         >
           {value}
@@ -215,18 +323,22 @@ const ExamScheduleManagement: React.FC = () => {
           }}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <p className="text-xs text-gray-500">Total Schedules</p>
             <p className="text-2xl font-semibold text-gray-900">{scheduleStats.total}</p>
           </div>
           <div className="bg-white border border-gray-200 rounded-xl p-4">
-            <p className="text-xs text-gray-500">Published</p>
-            <p className="text-2xl font-semibold text-gray-900">{scheduleStats.published}</p>
+            <p className="text-xs text-gray-500">Scheduled</p>
+            <p className="text-2xl font-semibold text-gray-900">{scheduleStats.scheduled}</p>
           </div>
           <div className="bg-white border border-gray-200 rounded-xl p-4">
-            <p className="text-xs text-gray-500">Draft</p>
-            <p className="text-2xl font-semibold text-gray-900">{scheduleStats.draft}</p>
+            <p className="text-xs text-gray-500">Ongoing</p>
+            <p className="text-2xl font-semibold text-gray-900">{scheduleStats.ongoing}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <p className="text-xs text-gray-500">Completed</p>
+            <p className="text-2xl font-semibold text-gray-900">{scheduleStats.completed}</p>
           </div>
         </div>
 
@@ -251,7 +363,32 @@ const ExamScheduleManagement: React.FC = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Exam Type</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Subject Name</label>
+                <input
+                  value={formData.courseName}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      courseName: e.target.value,
+                      courseCode:
+                        prev.courseCode ||
+                        e.target.value.trim().replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8)
+                    }))
+                  }
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Exam Name</label>
                 <select
                   value={formData.examType}
                   onChange={(e) =>
@@ -264,25 +401,41 @@ const ExamScheduleManagement: React.FC = () => {
                 >
                   <option value="Midterm">Midterm</option>
                   <option value="Final">Final</option>
+                  <option value="Quiz">Quiz</option>
+                  <option value="Assignment">Assignment</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Semester</label>
-                <select
-                  value={formData.semester}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, semester: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg"
-                >
-                  <option value="Spring">Spring</option>
-                  <option value="Summer">Summer</option>
-                  <option value="Fall">Fall</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Academic Year</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Room Number</label>
                 <input
-                  value={formData.academicYear}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, academicYear: e.target.value }))}
+                  value={formData.room}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, room: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Start Time</label>
+                <input
+                  type="time"
+                  value={formData.startTime}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, startTime: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">End Time</label>
+                <input
+                  type="time"
+                  value={formData.endTime}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Section</label>
+                <input
+                  value={formData.section}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, section: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg"
                 />
               </div>
@@ -298,27 +451,11 @@ const ExamScheduleManagement: React.FC = () => {
                   }
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg"
                 >
-                  <option value="Draft">Draft</option>
-                  <option value="Published">Published</option>
+                  <option value="Scheduled">Scheduled</option>
+                  <option value="Ongoing">Ongoing</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
-                <input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, endDate: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg"
-                />
               </div>
             </div>
 
@@ -361,6 +498,10 @@ const ExamScheduleManagement: React.FC = () => {
               <label htmlFor="exam-csv-upload" className="cursor-pointer text-blue-600 font-medium">
                 Click to upload CSV
               </label>
+              <p className="text-xs text-gray-500 mt-2">
+                Headers: ExamName, SubjectName, CourseCode, Section, Semester, AcademicYear, Date, StartTime, EndTime,
+                RoomNumber, TotalMarks, Status
+              </p>
               {uploadFile && <p className="text-sm text-gray-600 mt-2">Selected: {uploadFile.name}</p>}
             </div>
 

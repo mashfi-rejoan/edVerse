@@ -27,11 +27,20 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isAuthRequest = typeof originalRequest?.url === 'string'
+      && originalRequest.url.includes('/auth/');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          return Promise.reject(error);
+        }
         const response = await axios.post(`${API_BASE}/auth/refresh`, {
           refreshToken
         });
@@ -84,6 +93,7 @@ export interface User {
   universityId: string;
   role: string;
   phone?: string;
+  photoUrl?: string;
   bloodGroup?: string;
   isBloodDonor?: boolean;
   bloodDonorAvailable?: boolean;

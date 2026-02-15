@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import AdminModal from '../../components/AdminModal';
@@ -20,6 +20,8 @@ import {
   Legend,
   Tooltip
 } from 'recharts';
+import adminService from '../../services/adminService';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 interface ComplaintComment {
   id: string;
@@ -33,10 +35,10 @@ interface ComplaintRecord {
   title: string;
   description: string;
   submittedBy: string;
-  submittedRole: 'Student' | 'Teacher';
+  submittedRole: 'Student' | 'Teacher' | 'Staff';
   priority: 'High' | 'Medium' | 'Low';
-  status: 'Open' | 'In Progress' | 'Resolved';
-  category: 'Academic' | 'Facility' | 'Conduct' | 'Other';
+  status: 'Open' | 'In Progress' | 'Resolved' | 'Withdrawn' | 'Pending';
+  category: 'Academic' | 'Facility' | 'Conduct' | 'Other' | 'Administration' | 'Technical' | 'Harassment' | 'Lost and Found';
   assignedTo: string | null;
   submittedAt: string;
   assignedAt?: string;
@@ -47,56 +49,9 @@ interface ComplaintRecord {
 const staffMembers = ['Admin Office', 'Facility Team', 'Academic Board', 'Discipline Committee'];
 
 const ComplaintManagement: React.FC = () => {
-  const [complaints, setComplaints] = useState<ComplaintRecord[]>([
-    {
-      id: 'CMP-1001',
-      title: 'Projector not working in Lab-2',
-      description: 'The projector in Lab-2 is not turning on since last week.',
-      submittedBy: 'Muhammad Ali',
-      submittedRole: 'Student',
-      priority: 'High',
-      status: 'Open',
-      category: 'Facility',
-      assignedTo: null,
-      submittedAt: '2026-02-05',
-      comments: [
-        { id: 'c1', author: 'Muhammad Ali', time: '2026-02-05 10:30', text: 'Issue still persists today.' }
-      ]
-    },
-    {
-      id: 'CMP-1002',
-      title: 'Grade not updated for CSE201',
-      description: 'My midterm grade is still missing in the portal.',
-      submittedBy: 'Zainab Khan',
-      submittedRole: 'Student',
-      priority: 'Medium',
-      status: 'In Progress',
-      category: 'Academic',
-      assignedTo: 'Academic Board',
-      submittedAt: '2026-02-03',
-      assignedAt: '2026-02-04',
-      comments: [
-        { id: 'c2', author: 'Academic Board', time: '2026-02-04 14:20', text: 'Checking with course instructor.' }
-      ]
-    },
-    {
-      id: 'CMP-1003',
-      title: 'Cafeteria hygiene issue',
-      description: 'The cafeteria tables were not cleaned properly yesterday.',
-      submittedBy: 'Dr. Karim Rahman',
-      submittedRole: 'Teacher',
-      priority: 'Low',
-      status: 'Resolved',
-      category: 'Facility',
-      assignedTo: 'Facility Team',
-      submittedAt: '2026-02-01',
-      assignedAt: '2026-02-01',
-      resolution: 'Cleaning staff instructed to sanitize tables twice daily.',
-      comments: [
-        { id: 'c3', author: 'Facility Team', time: '2026-02-02 09:10', text: 'Cleaning schedule updated.' }
-      ]
-    }
-  ]);
+  const [complaints, setComplaints] = useState<ComplaintRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const [filters, setFilters] = useState({ status: 'All', priority: 'All', category: 'All', assignee: 'All' });
   const [selectedComplaint, setSelectedComplaint] = useState<ComplaintRecord | null>(null);
@@ -105,6 +60,45 @@ const ComplaintManagement: React.FC = () => {
   const [assigneeDraft, setAssigneeDraft] = useState('');
   const [commentDraft, setCommentDraft] = useState('');
   const [resolutionDraft, setResolutionDraft] = useState('');
+
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  const fetchComplaints = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getComplaints();
+      if (response.success) {
+        const complaintRows = (response.data?.complaints || []).map((complaint: any) => ({
+          id: complaint._id,
+          title: complaint.title,
+          description: complaint.description,
+          submittedBy: complaint.submittedByName || complaint.createdBy?.name || 'Anonymous',
+          submittedRole: complaint.submittedRole || 'Student',
+          priority: complaint.priority || 'Medium',
+          status: complaint.status || 'Open',
+          category: complaint.category || 'Other',
+          assignedTo: complaint.assignedTo || null,
+          submittedAt: complaint.createdAt ? new Date(complaint.createdAt).toISOString().slice(0, 10) : '',
+          assignedAt: complaint.assignedAt ? new Date(complaint.assignedAt).toISOString().slice(0, 10) : undefined,
+          resolution: complaint.resolution,
+          comments: (complaint.comments || []).map((comment: any, index: number) => ({
+            id: `${complaint._id}-${index}`,
+            author: comment.author,
+            time: comment.time ? new Date(comment.time).toISOString().slice(0, 16).replace('T', ' ') : '',
+            text: comment.text
+          }))
+        }));
+        setComplaints(complaintRows);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load complaints');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredComplaints = useMemo(() => {
     return complaints.filter((item) => {
@@ -219,43 +213,84 @@ const ComplaintManagement: React.FC = () => {
     setShowAssignModal(true);
   };
 
-  const handleResolve = (complaint: ComplaintRecord) => {
-    setComplaints((prev) =>
-      prev.map((item) =>
-        item.id === complaint.id
-          ? { ...item, status: 'Resolved', resolution: resolutionDraft || item.resolution }
-          : item
-      )
-    );
-    setShowDetailModal(false);
+  const handleResolve = async (complaint: ComplaintRecord) => {
+    try {
+      const response = await adminService.updateComplaint(complaint.id, {
+        status: 'Resolved',
+        resolution: resolutionDraft || complaint.resolution,
+        resolvedAt: new Date().toISOString()
+      });
+      if (response.success) {
+        await fetchComplaints();
+        setShowDetailModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to resolve complaint');
+    }
   };
 
-  const handleSaveAssignment = () => {
+  const handleReopen = async (complaint: ComplaintRecord) => {
+    try {
+      const response = await adminService.updateComplaint(complaint.id, {
+        status: 'Open',
+        resolution: ''
+      });
+      if (response.success) {
+        await fetchComplaints();
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to reopen complaint');
+    }
+  };
+
+  const handleSaveAssignment = async () => {
     if (!selectedComplaint) return;
-    setComplaints((prev) =>
-      prev.map((item) =>
-        item.id === selectedComplaint.id
-          ? { ...item, assignedTo: assigneeDraft, status: 'In Progress', assignedAt: new Date().toISOString().slice(0, 10) }
-          : item
-      )
-    );
-    setShowAssignModal(false);
+    try {
+      const response = await adminService.updateComplaint(selectedComplaint.id, {
+        assignedTo: assigneeDraft,
+        status: 'In Progress',
+        assignedAt: new Date().toISOString()
+      });
+      if (response.success) {
+        await fetchComplaints();
+        setShowAssignModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to assign complaint');
+    }
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!selectedComplaint || !commentDraft.trim()) return;
-    const newComment: ComplaintComment = {
-      id: `c-${Date.now()}`,
-      author: 'Admin',
-      time: new Date().toISOString().slice(0, 16).replace('T', ' '),
-      text: commentDraft
-    };
-    setComplaints((prev) =>
-      prev.map((item) =>
-        item.id === selectedComplaint.id ? { ...item, comments: [...item.comments, newComment] } : item
-      )
-    );
-    setCommentDraft('');
+    const nextComments: ComplaintComment[] = [
+      ...selectedComplaint.comments,
+      {
+        id: `c-${Date.now()}`,
+        author: 'Admin',
+        time: new Date().toISOString().slice(0, 16).replace('T', ' '),
+        text: commentDraft
+      }
+    ];
+
+    try {
+      const response = await adminService.updateComplaint(selectedComplaint.id, {
+        comments: nextComments.map((comment) => ({
+          author: comment.author,
+          time: new Date(comment.time),
+          text: comment.text
+        }))
+      });
+      if (response.success) {
+        await fetchComplaints();
+        setCommentDraft('');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to add comment');
+    }
   };
 
   const actions = [
@@ -264,6 +299,16 @@ const ComplaintManagement: React.FC = () => {
     { label: 'Resolve', onClick: handleResolve, color: 'red' as const, icon: <CheckCircle size={18} /> }
   ];
 
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <LoadingSpinner text="Loading complaints..." />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
         <PageHeader
@@ -271,6 +316,12 @@ const ComplaintManagement: React.FC = () => {
           subtitle="Track, assign, and resolve student & teacher complaints"
           icon={<AlertTriangle size={24} className="text-white" />}
         />
+
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="bg-white border border-gray-200 rounded-xl p-4">
@@ -452,13 +503,7 @@ const ComplaintManagement: React.FC = () => {
                   </button>
                 ) : (
                   <button
-                    onClick={() =>
-                      setComplaints((prev) =>
-                        prev.map((item) =>
-                          item.id === selectedComplaint.id ? { ...item, status: 'Open' } : item
-                        )
-                      )
-                    }
+                    onClick={() => handleReopen(selectedComplaint)}
                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                   >
                     Reopen

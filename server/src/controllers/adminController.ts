@@ -6,9 +6,44 @@ import Section from '../models/Section';
 import Enrollment from '../models/Enrollment';
 import Exam from '../models/Exam';
 import Announcement from '../models/Announcement';
+import Routine from '../models/Routine';
 import User from '../models/User';
 import bcryptjs from 'bcryptjs';
 import { AuthRequest } from '../middleware/auth';
+
+const { Complaint } = require('../database/schemas');
+
+const extractYear = (value?: string | number | Date) => {
+  if (!value) return new Date().getFullYear();
+  if (value instanceof Date) return value.getFullYear();
+  const match = String(value).match(/\d{4}/);
+  return match ? Number(match[0]) : new Date().getFullYear();
+};
+
+const resolveDeptId = (deptId?: string | number) => {
+  if (deptId === undefined || deptId === null || `${deptId}`.trim() === '') {
+    return null;
+  }
+  return String(deptId).replace(/\D/g, '');
+};
+
+const generateStudentUniversityId = async (year: number, deptId: string) => {
+  const prefix = `${year}${deptId}`;
+  const count = await Student.countDocuments({
+    universityId: { $regex: `^${prefix}` }
+  });
+  return `${prefix}${count + 1}`;
+};
+
+const generateTeacherUniversityId = async (year: number, deptId: string) => {
+  const deptIdPadded = deptId.padStart(2, '0');
+  const prefix = `${year}${deptIdPadded}`;
+  const count = await Teacher.countDocuments({
+    universityId: { $regex: `^${prefix}` }
+  });
+  const serial = String(count + 1).padStart(2, '0');
+  return `${prefix}${serial}`;
+};
 
 // Dashboard Stats
 export const getDashboardStats = async (req: AuthRequest, res: Response) => {
@@ -104,6 +139,8 @@ export const createTeacher = async (req: Request, res: Response) => {
       email,
       password,
       phone,
+      deptId,
+      departmentId,
       designation,
       department,
       specialization,
@@ -115,18 +152,31 @@ export const createTeacher = async (req: Request, res: Response) => {
       experience
     } = req.body;
 
+    let resolvedUniversityId = universityId as string | undefined;
+    if (!resolvedUniversityId) {
+      const resolvedDeptId = resolveDeptId(deptId ?? departmentId);
+      if (!resolvedDeptId) {
+        return res.status(400).json({
+          success: false,
+          error: 'departmentId is required to generate teacher ID'
+        });
+      }
+      const year = extractYear(dateOfJoining);
+      resolvedUniversityId = await generateTeacherUniversityId(year, resolvedDeptId);
+    }
+
     // Create user account first
-    const hashedPassword = await bcryptjs.hash(password || 'teacher123', 10);
     const user = await User.create({
       name,
       email,
-      password: hashedPassword,
+      universityId: resolvedUniversityId,
+      password: password || 'teacher123',
       role: 'teacher'
     });
 
     // Create teacher profile
     const teacher = await Teacher.create({
-      universityId,
+      universityId: resolvedUniversityId,
       userId: user._id,
       name,
       email,
@@ -151,6 +201,103 @@ export const createTeacher = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to create teacher'
+    });
+  }
+};
+
+export const createTeachersBulk = async (req: Request, res: Response) => {
+  try {
+    const teachers = Array.isArray(req.body.teachers) ? req.body.teachers : [];
+
+    if (teachers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'teachers array is required'
+      });
+    }
+
+    const prefixCounts = new Map<string, number>();
+    const created: any[] = [];
+
+    for (const payload of teachers) {
+      const {
+        universityId,
+        name,
+        email,
+        password,
+        phone,
+        deptId,
+        departmentId,
+        designation,
+        department,
+        specialization,
+        qualifications,
+        officeRoom,
+        officeHours,
+        bloodGroup,
+        dateOfJoining,
+        experience
+      } = payload;
+
+      let resolvedUniversityId = universityId as string | undefined;
+      if (!resolvedUniversityId) {
+        const resolvedDeptId = resolveDeptId(deptId ?? departmentId);
+        if (!resolvedDeptId) {
+          return res.status(400).json({
+            success: false,
+            error: 'departmentId is required to generate teacher ID'
+          });
+        }
+        const year = extractYear(dateOfJoining);
+        const deptIdPadded = resolvedDeptId.padStart(2, '0');
+        const prefix = `${year}${deptIdPadded}`;
+        let count = prefixCounts.get(prefix);
+        if (count === undefined) {
+          count = await Teacher.countDocuments({ universityId: { $regex: `^${prefix}` } });
+        }
+        count += 1;
+        prefixCounts.set(prefix, count);
+        const serial = String(count).padStart(2, '0');
+        resolvedUniversityId = `${prefix}${serial}`;
+      }
+
+      const user = await User.create({
+        name,
+        email,
+        universityId: resolvedUniversityId,
+        password: password || 'teacher123',
+        role: 'teacher'
+      });
+
+      const teacher = await Teacher.create({
+        universityId: resolvedUniversityId,
+        userId: user._id,
+        name,
+        email,
+        phone,
+        designation,
+        department,
+        specialization,
+        qualifications: qualifications || [],
+        officeRoom,
+        officeHours,
+        bloodGroup,
+        dateOfJoining: dateOfJoining || new Date(),
+        experience: experience || 0
+      });
+
+      created.push(teacher);
+    }
+
+    res.status(201).json({
+      success: true,
+      data: created,
+      message: 'Teachers created successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create teachers'
     });
   }
 };
@@ -277,6 +424,8 @@ export const createStudent = async (req: Request, res: Response) => {
       email,
       password,
       phone,
+      deptId,
+      departmentId,
       batch,
       section,
       semester,
@@ -288,18 +437,31 @@ export const createStudent = async (req: Request, res: Response) => {
       admissionDate
     } = req.body;
 
+    let resolvedUniversityId = universityId as string | undefined;
+    if (!resolvedUniversityId) {
+      const resolvedDeptId = resolveDeptId(deptId ?? departmentId);
+      if (!resolvedDeptId) {
+        return res.status(400).json({
+          success: false,
+          error: 'departmentId is required to generate student ID'
+        });
+      }
+      const year = extractYear(batch || admissionDate);
+      resolvedUniversityId = await generateStudentUniversityId(year, resolvedDeptId);
+    }
+
     // Create user account first
-    const hashedPassword = await bcryptjs.hash(password || 'student123', 10);
     const user = await User.create({
       name,
       email,
-      password: hashedPassword,
+      universityId: resolvedUniversityId,
+      password: password || 'student123',
       role: 'student'
     });
 
     // Create student profile
     const student = await Student.create({
-      universityId,
+      universityId: resolvedUniversityId,
       userId: user._id,
       name,
       email,
@@ -324,6 +486,101 @@ export const createStudent = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to create student'
+    });
+  }
+};
+
+export const createStudentsBulk = async (req: Request, res: Response) => {
+  try {
+    const students = Array.isArray(req.body.students) ? req.body.students : [];
+
+    if (students.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'students array is required'
+      });
+    }
+
+    const prefixCounts = new Map<string, number>();
+    const created: any[] = [];
+
+    for (const payload of students) {
+      const {
+        universityId,
+        name,
+        email,
+        password,
+        phone,
+        deptId,
+        departmentId,
+        batch,
+        section,
+        semester,
+        bloodGroup,
+        guardianName,
+        guardianPhone,
+        address,
+        dateOfBirth,
+        admissionDate
+      } = payload;
+
+      let resolvedUniversityId = universityId as string | undefined;
+      if (!resolvedUniversityId) {
+        const resolvedDeptId = resolveDeptId(deptId ?? departmentId);
+        if (!resolvedDeptId) {
+          return res.status(400).json({
+            success: false,
+            error: 'departmentId is required to generate student ID'
+          });
+        }
+        const year = extractYear(batch || admissionDate);
+        const prefix = `${year}${resolvedDeptId}`;
+        let count = prefixCounts.get(prefix);
+        if (count === undefined) {
+          count = await Student.countDocuments({ universityId: { $regex: `^${prefix}` } });
+        }
+        count += 1;
+        prefixCounts.set(prefix, count);
+        resolvedUniversityId = `${prefix}${count}`;
+      }
+
+      const user = await User.create({
+        name,
+        email,
+        universityId: resolvedUniversityId,
+        password: password || 'student123',
+        role: 'student'
+      });
+
+      const student = await Student.create({
+        universityId: resolvedUniversityId,
+        userId: user._id,
+        name,
+        email,
+        phone,
+        batch,
+        section,
+        semester,
+        bloodGroup,
+        guardianName,
+        guardianPhone,
+        address,
+        dateOfBirth,
+        admissionDate: admissionDate || new Date()
+      });
+
+      created.push(student);
+    }
+
+    res.status(201).json({
+      success: true,
+      data: created,
+      message: 'Students created successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create students'
     });
   }
 };
@@ -517,6 +774,162 @@ export const deleteCourse = async (req: Request, res: Response) => {
   }
 };
 
+// Sections
+export const getSections = async (_req: Request, res: Response) => {
+  try {
+    const sections = await Section.find()
+      .populate('assignedTeacher', 'universityId name designation department')
+      .populate('enrolledStudents', 'universityId name email batch section')
+      .sort({ courseCode: 1, section: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: sections
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch sections'
+    });
+  }
+};
+
+export const createSection = async (req: Request, res: Response) => {
+  try {
+    const section = await Section.create(req.body);
+
+    res.status(201).json({
+      success: true,
+      data: section,
+      message: 'Section created successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create section'
+    });
+  }
+};
+
+export const updateSection = async (req: Request, res: Response) => {
+  try {
+    const section = await Section.findById(req.params.id)
+      .populate('assignedTeacher', 'universityId name designation department')
+      .populate('enrolledStudents', 'universityId name email batch section');
+
+    if (!section) {
+      return res.status(404).json({
+        success: false,
+        error: 'Section not found'
+      });
+    }
+
+    Object.assign(section, req.body);
+    await section.save();
+
+    res.status(200).json({
+      success: true,
+      data: section,
+      message: 'Section updated successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update section'
+    });
+  }
+};
+
+export const getSectionStudents = async (req: Request, res: Response) => {
+  try {
+    const section = await Section.findById(req.params.id)
+      .populate('enrolledStudents', 'universityId name email batch section');
+
+    if (!section) {
+      return res.status(404).json({
+        success: false,
+        error: 'Section not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: section.enrolledStudents
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch section students'
+    });
+  }
+};
+
+// Routines
+export const getRoutines = async (_req: Request, res: Response) => {
+  try {
+    const routines = await Routine.find().sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: routines
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch routines'
+    });
+  }
+};
+
+export const createRoutine = async (req: AuthRequest, res: Response) => {
+  try {
+    const routine = await Routine.create({
+      ...req.body,
+      createdBy: req.user?._id,
+      lastModifiedBy: req.user?._id
+    });
+
+    res.status(201).json({
+      success: true,
+      data: routine,
+      message: 'Routine created successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create routine'
+    });
+  }
+};
+
+export const updateRoutine = async (req: AuthRequest, res: Response) => {
+  try {
+    const routine = await Routine.findByIdAndUpdate(
+      req.params.id,
+      { $set: { ...req.body, lastModifiedBy: req.user?._id } },
+      { new: true, runValidators: true }
+    );
+
+    if (!routine) {
+      return res.status(404).json({
+        success: false,
+        error: 'Routine not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: routine,
+      message: 'Routine updated successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update routine'
+    });
+  }
+};
+
 // Registrations (Enrollments)
 export const getRegistrations = async (req: Request, res: Response) => {
   try {
@@ -600,6 +1013,53 @@ export const updateRegistration = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to update registration'
+    });
+  }
+};
+
+export const createRegistration = async (req: Request, res: Response) => {
+  try {
+    const registration = await Enrollment.create(req.body);
+
+    res.status(201).json({
+      success: true,
+      data: registration,
+      message: 'Registration created successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create registration'
+    });
+  }
+};
+
+export const createRegistrationsBulk = async (req: Request, res: Response) => {
+  try {
+    const registrations = Array.isArray(req.body.registrations)
+      ? req.body.registrations
+      : [];
+
+    if (registrations.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'registrations array is required'
+      });
+    }
+
+    const created = await Enrollment.insertMany(registrations, { ordered: false });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        created: created.length
+      },
+      message: 'Registrations created successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create registrations'
     });
   }
 };
@@ -798,6 +1258,69 @@ export const deleteAnnouncement = async (req: Request, res: Response) => {
   }
 };
 
+// Complaints
+export const getComplaints = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const complaints = await Complaint.find()
+      .populate('createdBy', 'name email role')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Complaint.countDocuments();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        complaints,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch complaints'
+    });
+  }
+};
+
+export const updateComplaint = async (req: Request, res: Response) => {
+  try {
+    const complaint = await Complaint.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'name email role');
+
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        error: 'Complaint not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: complaint,
+      message: 'Complaint updated successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update complaint'
+    });
+  }
+};
+
 // Profile & Settings
 export const getAdminProfile = async (req: AuthRequest, res: Response) => {
   try {
@@ -856,7 +1379,7 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
   try {
     const { oldPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.user?._id);
+    const user = await User.findById(req.userId).select('+password');
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -874,7 +1397,7 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
     }
 
     // Hash and save new password
-    user.password = await bcryptjs.hash(newPassword, 10);
+    user.password = newPassword;
     await user.save();
 
     res.status(200).json({
@@ -891,10 +1414,30 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
 
 export const uploadProfilePhoto = async (req: Request, res: Response) => {
   try {
-    // Placeholder - will implement file upload later
-    res.status(501).json({
-      success: false,
-      error: 'Photo upload not implemented yet'
+    const authReq = req as AuthRequest;
+    if (!authReq.file) {
+      return res.status(400).json({
+        success: false,
+        error: 'No file uploaded'
+      });
+    }
+
+    const user = await User.findById(authReq.userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    user.photoUrl = `/uploads/profile-photos/${authReq.file.filename}`;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        photoUrl: user.photoUrl
+      }
     });
   } catch (error: any) {
     res.status(500).json({

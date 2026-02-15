@@ -10,10 +10,8 @@ const getCurrentSemester = () => {
   const year = now.getFullYear();
   
   let semester;
-  if (month >= 1 && month <= 4) {
+  if (month >= 1 && month <= 6) {
     semester = 'Spring';
-  } else if (month >= 5 && month <= 8) {
-    semester = 'Summer';
   } else {
     semester = 'Fall';
   }
@@ -33,12 +31,12 @@ router.get('/semesters', async (req, res) => {
     years.sort((a, b) => b - a); // Most recent first
     
     years.forEach(year => {
-      ['Spring', 'Summer', 'Fall'].forEach(semester => {
+      ['Spring', 'Fall'].forEach(semester => {
         const semesterData = { semester, year };
         // Only include past and current semesters
         if (year < current.year || 
             (year === current.year && 
-             (['Spring', 'Summer', 'Fall'].indexOf(semester) <= ['Spring', 'Summer', 'Fall'].indexOf(current.semester)))) {
+             (['Spring', 'Fall'].indexOf(semester) <= ['Spring', 'Fall'].indexOf(current.semester)))) {
           availableSemesters.push(semesterData);
         }
       });

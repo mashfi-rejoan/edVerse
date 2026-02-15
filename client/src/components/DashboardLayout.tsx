@@ -20,9 +20,7 @@ interface UpcomingEvent {
 
 const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(
-    localStorage.getItem('studentProfilePhoto')
-  );
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [eventsOpen, setEventsOpen] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
@@ -32,9 +30,12 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setUser(authService.getCurrentUser());
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+    setProfilePhoto(currentUser?.photoUrl ? apiUrl(currentUser.photoUrl) : null);
     const handlePhotoUpdate = () => {
-      setProfilePhoto(localStorage.getItem('studentProfilePhoto'));
+      const updatedUser = authService.getCurrentUser();
+      setProfilePhoto(updatedUser?.photoUrl ? apiUrl(updatedUser.photoUrl) : null);
     };
     window.addEventListener('profilePhotoUpdated', handlePhotoUpdate);
     return () => window.removeEventListener('profilePhotoUpdated', handlePhotoUpdate);

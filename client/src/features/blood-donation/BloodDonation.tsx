@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Heart, Plus, MapPin, Phone, AlertCircle, CheckCircle, Droplets } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import authService from '../../services/authService';
+import bloodDonorService from '../../services/bloodDonorService';
 
 const BloodDonation = () => {
   const user = authService.getCurrentUser();
   const studentBloodType = user?.bloodGroup || 'O+';
   const [donations, setDonations] = useState<any[]>([]);
+  const [donors, setDonors] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'my-donations' | 'find-donors'>('my-donations');
   const [searchBloodType, setSearchBloodType] = useState<string>('');
@@ -28,26 +30,78 @@ const BloodDonation = () => {
   ];
 
   useEffect(() => {
-    const saved = localStorage.getItem('student_blood_donations');
-    if (saved) {
-      setDonations(JSON.parse(saved));
-    }
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const newDonation = {
-      _id: Date.now().toString(),
-      ...formData,
-      donatedAt: new Date().toISOString(),
-      studentName: user?.name || 'Student',
-      studentId: user?.universityId || user?.id || 'STUDENT001'
+    const fetchProfile = async () => {
+      try {
+        const response = await bloodDonorService.getMyProfile();
+        if (response.success && response.data) {
+          setDonations(response.data.donationHistory || []);
+        }
+      } catch (error) {
+        // Ignore if profile not created yet
+      }
     };
 
-    const updated = [...donations, newDonation];
-    setDonations(updated);
-    localStorage.setItem('student_blood_donations', JSON.stringify(updated));
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    const fetchDonors = async () => {
+      try {
+        const params = searchBloodType ? { bloodType: searchBloodType } : undefined;
+        const response = await bloodDonorService.getDonors(params);
+        if (response.success) {
+          setDonors(response.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch donors:', error);
+      }
+    };
+
+    if (activeTab === 'find-donors') {
+      fetchDonors();
+    }
+  }, [activeTab, searchBloodType]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      let profile = null;
+      try {
+        const profileResponse = await bloodDonorService.getMyProfile();
+        if (profileResponse.success) {
+          profile = profileResponse.data;
+        }
+      } catch (error) {
+        // ignore
+      }
+
+      if (!profile) {
+        await bloodDonorService.registerDonor({
+          name: user?.name || 'Student',
+          email: user?.email || 'student@example.com',
+          phone: user?.phone || 'N/A',
+          bloodType: formData.bloodType,
+          userType: 'Student',
+          universityId: user?.universityId || '',
+          batch: '2026',
+          location: formData.location || 'Campus',
+          emergencyContact: user?.phone || 'N/A'
+        });
+      }
+
+      const response = await bloodDonorService.recordDonation({
+        date: formData.donationDate,
+        location: formData.location,
+        notes: formData.notes
+      });
+
+      if (response.success && response.data) {
+        setDonations(response.data.donationHistory || []);
+      }
+    } catch (error) {
+      console.error('Failed to record donation:', error);
+    }
 
     setFormData({
       bloodType: studentBloodType,
@@ -58,10 +112,17 @@ const BloodDonation = () => {
     setShowForm(false);
   };
 
-  const handleDelete = (id: string) => {
-    const updated = donations.filter(d => d._id !== id);
-    setDonations(updated);
-    localStorage.setItem('student_blood_donations', JSON.stringify(updated));
+  const handleDelete = async (id: string) => {
+    const updated = donations.filter((d) => d._id !== id);
+    try {
+      await bloodDonorService.updateProfile({
+        donationHistory: updated,
+        lastDonated: updated.length ? updated[updated.length - 1].date : null
+      });
+      setDonations(updated);
+    } catch (error) {
+      console.error('Failed to update donation history:', error);
+    }
   };
 
   const getBloodTypeColor = (type: string) => {
@@ -89,20 +150,9 @@ const BloodDonation = () => {
     return daysSince >= 56;
   };
 
-  const mockBloodDonors = [
-    { _id: '1', name: 'Karim Ahmed', bloodType: 'O+', phone: '+880 1700 123456', location: 'Dhaka', lastDonated: '2026-01-15' },
-    { _id: '2', name: 'Fatima Islam', bloodType: 'B+', phone: '+880 1800 234567', location: 'Dhaka', lastDonated: '2026-02-01' },
-    { _id: '3', name: 'Rajib Kumar', bloodType: 'A+', phone: '+880 1900 345678', location: 'Dhaka', lastDonated: '2025-12-20' },
-    { _id: '4', name: 'Sarah Rahman', bloodType: 'O+', phone: '+880 1600 456789', location: 'Dhaka', lastDonated: '2026-01-28' },
-    { _id: '5', name: 'Hassan Morshed', bloodType: 'AB+', phone: '+880 1700 567890', location: 'Dhaka', lastDonated: '2025-11-10' },
-    { _id: '6', name: 'Nadia Sultana', bloodType: 'B-', phone: '+880 1800 678901', location: 'Dhaka', lastDonated: '2026-01-05' },
-    { _id: '7', name: 'Imran Khan', bloodType: 'A-', phone: '+880 1900 789012', location: 'Dhaka', lastDonated: '2025-10-30' },
-    { _id: '8', name: 'Sumi Das', bloodType: 'O-', phone: '+880 1600 890123', location: 'Dhaka', lastDonated: '2026-01-20' },
-  ];
-
   const filteredDonors = searchBloodType
-    ? mockBloodDonors.filter(donor => donor.bloodType === searchBloodType)
-    : mockBloodDonors;
+    ? donors.filter((donor) => donor.bloodType === searchBloodType)
+    : donors;
 
   return (
     <DashboardLayout title="Blood Donation">

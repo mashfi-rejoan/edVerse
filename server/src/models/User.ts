@@ -8,6 +8,7 @@ export interface IUser extends Document {
   password: string;
   role: 'admin' | 'student' | 'teacher' | 'moderator' | 'cafeteria-manager' | 'librarian';
   phone?: string;
+  photoUrl?: string;
   bloodGroup?: string;
   isBloodDonor: boolean;
   bloodDonorAvailable: boolean;
@@ -50,6 +51,10 @@ const UserSchema = new Schema<IUser>(
       default: 'student'
     },
     phone: {
+      type: String,
+      trim: true
+    },
+    photoUrl: {
       type: String,
       trim: true
     },

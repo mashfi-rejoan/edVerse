@@ -188,12 +188,17 @@ Required Endpoints:
 5. **routineController.ts** - Class schedule management
 
 **Tasks**:
-- [ ] Create controller files
-- [ ] Implement CRUD operations
-- [ ] Add error handling
+- [x] Create controller files
+- [x] Implement CRUD operations
+- [x] Add error handling
 - [ ] Add input validation
 - [ ] Add pagination support
 - [ ] Add search/filter functionality
+
+### ✅ Execution Log (February 15, 2026)
+- Added `teacherController`, `studentController`, `attendanceController`, and `routineController` and wired routes.
+- Fixed password double-hashing in admin/profile controllers and teacher/student seed scripts.
+- Verified teacher and student profile endpoints (GET/PUT profile, change password, upload photo).
 
 ---
 
