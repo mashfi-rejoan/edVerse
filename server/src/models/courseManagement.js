@@ -66,9 +66,9 @@ const RetakeHistorySchema = new Schema({
 }, { timestamps: true });
 
 module.exports = {
-  Semester: mongoose.model('Semester', SemesterSchema),
-  Course: mongoose.model('Course', CourseSchema),
-  Student: mongoose.model('Student', StudentSchema),
-  Enrollment: mongoose.model('Enrollment', EnrollmentSchema),
-  RetakeHistory: mongoose.model('RetakeHistory', RetakeHistorySchema),
+  Semester: mongoose.models.Semester || mongoose.model('Semester', SemesterSchema),
+  Course: mongoose.models.Course || mongoose.model('Course', CourseSchema),
+  Student: mongoose.models.Student || mongoose.model('Student', StudentSchema),
+  Enrollment: mongoose.models.Enrollment || mongoose.model('Enrollment', EnrollmentSchema),
+  RetakeHistory: mongoose.models.RetakeHistory || mongoose.model('RetakeHistory', RetakeHistorySchema),
 };

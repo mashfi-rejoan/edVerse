@@ -94,6 +94,7 @@ export const seedTeachers = async () => {
       const user = await User.create({
         name: teacherData.name,
         email: teacherData.email,
+        universityId: teacherData.universityId,
         password: hashedPassword,
         role: 'teacher',
         isActive: true
@@ -124,7 +125,7 @@ export const seedTeachers = async () => {
 
 if (require.main === module) {
   mongoose
-    .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/edverse')
+    .connect(process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/edverse')
     .then(async () => {
       await seedTeachers();
       await mongoose.connection.close();

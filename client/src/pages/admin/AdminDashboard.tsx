@@ -58,19 +58,7 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
-      // Mock data
-      setStats({
-        totalStudents: 1245,
-        totalTeachers: 87,
-        totalCourses: 156,
-        activeEnrollments: 2847,
-        pendingComplaints: 12,
-        todayAttendance: 94.5,
-        upcomingExams: 8,
-        announcements: 5,
-        pendingApprovals: 23,
-        averageGPA: 3.42
-      });
+      setStats(null);
     } finally {
       setLoading(false);
     }

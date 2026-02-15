@@ -17,6 +17,7 @@ const TeacherManagement: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [formDefaults, setFormDefaults] = useState<Record<string, any>>({});
 
   useEffect(() => {
     fetchTeachers();
@@ -27,56 +28,26 @@ const TeacherManagement: React.FC = () => {
       setLoading(true);
       const response = await adminService.getTeachers();
       if (response.success) {
-        setTeachers(response.data || []);
+        const teacherRows = (response.data?.teachers || []).map((teacher: any) => ({
+          id: teacher._id,
+          teacherId: teacher.universityId,
+          name: teacher.name,
+          email: teacher.email,
+          phone: teacher.phone,
+          department: teacher.department,
+          designation: teacher.designation,
+          specialization: teacher.specialization,
+          bloodGroup: teacher.bloodGroup,
+          status: teacher.status === 'Active' ? 'Active' : 'Inactive',
+          coursesAssigned: teacher.assignedCourses?.length || 0,
+          joinDate: teacher.dateOfJoining ? new Date(teacher.dateOfJoining).toISOString().split('T')[0] : '',
+          raw: teacher
+        }));
+        setTeachers(teacherRows);
       }
     } catch (err) {
       setError('Failed to load teachers');
       console.error(err);
-      // Mock data for demo
-      setTeachers([
-        { 
-          id: '1', 
-          name: 'Dr. Ahmed Khan', 
-          email: 'ahmed@example.com', 
-          phone: '+8801712345678',
-          department: 'CSE', 
-          designation: 'Professor',
-          specialization: 'Machine Learning',
-          teacherId: 'CSE-T-001',
-          bloodGroup: 'A+',
-          status: 'Active',
-          coursesAssigned: 3,
-          joinDate: '2022-01-15' 
-        },
-        { 
-          id: '2', 
-          name: 'Prof. Fatima Ali', 
-          email: 'fatima@example.com',
-          phone: '+8801798765432',
-          department: 'CSE', 
-          designation: 'Associate Professor',
-          specialization: 'Database Systems',
-          teacherId: 'CSE-T-002',
-          bloodGroup: 'B+',
-          status: 'Active',
-          coursesAssigned: 2,
-          joinDate: '2021-06-20' 
-        },
-        { 
-          id: '3', 
-          name: 'Dr. Karim Rahman', 
-          email: 'karim@example.com',
-          phone: '+8801656789012',
-          department: 'CSE', 
-          designation: 'Assistant Professor',
-          specialization: 'Web Development',
-          teacherId: 'CSE-T-003',
-          bloodGroup: 'O+',
-          status: 'Inactive',
-          coursesAssigned: 0,
-          joinDate: '2023-03-10' 
-        }
-      ]);
     } finally {
       setLoading(false);
     }
@@ -119,11 +90,20 @@ const TeacherManagement: React.FC = () => {
     setShowDetailModal(true);
   };
 
-  const handleToggleStatus = (teacher: any) => {
-    const newStatus = teacher.status === 'Active' ? 'Inactive' : 'Active';
-    setTeachers(teachers.map(t => 
-      t.id === teacher.id ? { ...t, status: newStatus } : t
-    ));
+  const handleToggleStatus = async (teacher: any) => {
+    try {
+      const newStatus = teacher.status === 'Active' ? 'Inactive' : 'Active';
+      const apiStatus = newStatus === 'Active' ? 'Active' : 'On Leave';
+      const response = await adminService.updateTeacher(teacher.id, { status: apiStatus });
+      if (response.success) {
+        setTeachers(teachers.map(t => 
+          t.id === teacher.id ? { ...t, status: newStatus } : t
+        ));
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to update teacher status');
+    }
   };
 
   const handleBulkUpload = () => {
@@ -157,36 +137,71 @@ const TeacherManagement: React.FC = () => {
     return `edverse@${cleanPhone}`;
   };
 
-  const handleAddTeacher = (data: any) => {
+  const handleAddTeacher = async (data: any) => {
     // Generate ID and password
     const generatedId = generateTeacherId(data.department);
     const generatedPassword = generateDefaultPassword(data.phone);
 
-    const newTeacher = {
-      id: String(teachers.length + 1),
-      ...data,
-      teacherId: generatedId,
-      defaultPassword: generatedPassword,
-      status: data.status || 'Active',
-      coursesAssigned: 0,
-      joinDate: new Date().toISOString().split('T')[0]
+    const payload = {
+      universityId: generatedId,
+      name: data.fullName,
+      email: data.email,
+      phone: data.phone,
+      department: data.department,
+      designation: data.designation,
+      specialization: data.specialization,
+      bloodGroup: data.bloodGroup,
+      status: data.status === 'Active' ? 'Active' : 'On Leave',
+      password: generatedPassword
     };
 
-    setTeachers([...teachers, newTeacher]);
-    setShowModal(false);
-
-    // Show success notification with ID and password
-    alert(`Teacher added successfully!\n\nTeacher ID: ${generatedId}\nDefault Password: ${generatedPassword}\n\nPlease share these credentials with the teacher.`);
+    try {
+      if (editingId) {
+        const response = await adminService.updateTeacher(editingId, payload);
+        if (response.success) {
+          await fetchTeachers();
+        }
+      } else {
+        const response = await adminService.createTeacher(payload);
+        if (response.success) {
+          await fetchTeachers();
+          alert(`Teacher added successfully!\n\nTeacher ID: ${generatedId}\nDefault Password: ${generatedPassword}\n\nPlease share these credentials with the teacher.`);
+        }
+      }
+      setShowModal(false);
+      setEditingId(null);
+      setFormDefaults({});
+    } catch (err) {
+      console.error(err);
+      setError('Failed to save teacher');
+    }
   };
 
   const handleEditTeacher = (teacher: any) => {
     setEditingId(teacher.id);
+    setFormDefaults({
+      fullName: teacher.name,
+      email: teacher.email,
+      phone: teacher.phone,
+      department: teacher.department,
+      designation: teacher.designation,
+      specialization: teacher.specialization,
+      bloodGroup: teacher.bloodGroup || '',
+      status: teacher.status
+    });
     setShowModal(true);
   };
 
-  const handleDeleteTeacher = (teacher: any) => {
-    if (confirm(`Delete ${teacher.name}?`)) {
-      setTeachers(teachers.filter(t => t.id !== teacher.id));
+  const handleDeleteTeacher = async (teacher: any) => {
+    if (!confirm(`Delete ${teacher.name}?`)) return;
+    try {
+      const response = await adminService.deleteTeacher(teacher.id);
+      if (response.success) {
+        setTeachers(teachers.filter(t => t.id !== teacher.id));
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to delete teacher');
     }
   };
 
@@ -303,6 +318,7 @@ const TeacherManagement: React.FC = () => {
               onSubmit={handleAddTeacher}
               onCancel={() => setShowModal(false)}
               submitText={editingId ? 'Update' : 'Add Teacher'}
+              defaultValues={formDefaults}
             />
           </div>
         </AdminModal>

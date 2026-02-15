@@ -71,69 +71,26 @@ const StudentManagement: React.FC = () => {
       setLoading(true);
       const response = await adminService.getStudents();
       if (response.success) {
-        setStudents(response.data || []);
+        const studentRows = (response.data?.students || []).map((student: any) => ({
+          id: student._id,
+          name: student.name,
+          email: student.email,
+          phone: student.phone,
+          studentId: student.universityId,
+          batch: student.batch,
+          section: student.section,
+          status: student.status,
+          bloodGroup: student.bloodGroup,
+          registeredCourses: [],
+          attendance: 0,
+          cgpa: student.cgpa ?? 0,
+          academicStanding: student.academicStanding ?? 'Good'
+        }));
+        setStudents(studentRows);
       }
     } catch (err) {
       setError('Failed to load students');
       console.error(err);
-      // Mock data for demo
-      setStudents([
-        {
-          id: '1',
-          name: 'Muhammad Ali',
-          email: 'ali@student.edu.bd',
-          phone: '+8801712345678',
-          studentId: 'CSE21001',
-          batch: '2022',
-          section: '1',
-          status: 'Active',
-          bloodGroup: 'A+',
-          registeredCourses: [
-            { code: 'CSE201', name: 'Data Structures', grade: 'A', attendance: 92 },
-            { code: 'CSE203', name: 'Algorithms', grade: 'B+', attendance: 88 },
-            { code: 'MAT201', name: 'Discrete Math', grade: 'A-', attendance: 90 }
-          ],
-          attendance: 90,
-          cgpa: 3.65,
-          academicStanding: 'Good'
-        },
-        {
-          id: '2',
-          name: 'Zainab Khan',
-          email: 'zainab@student.edu.bd',
-          phone: '+8801798765432',
-          studentId: 'CSE21002',
-          batch: '2022',
-          section: '2',
-          status: 'Active',
-          bloodGroup: 'B+',
-          registeredCourses: [
-            { code: 'CSE201', name: 'Data Structures', grade: 'B', attendance: 78 },
-            { code: 'CSE205', name: 'Digital Logic', grade: 'B-', attendance: 72 }
-          ],
-          attendance: 75,
-          cgpa: 3.15,
-          academicStanding: 'Warning'
-        },
-        {
-          id: '3',
-          name: 'Rafiul Hasan',
-          email: 'rafiul@student.edu.bd',
-          phone: '+8801656789012',
-          studentId: 'CSE20011',
-          batch: '2021',
-          section: '3',
-          status: 'Suspended',
-          bloodGroup: 'O+',
-          registeredCourses: [
-            { code: 'CSE301', name: 'Operating Systems', grade: 'C', attendance: 58 },
-            { code: 'CSE303', name: 'Computer Networks', grade: 'C+', attendance: 62 }
-          ],
-          attendance: 60,
-          cgpa: 2.45,
-          academicStanding: 'Probation'
-        }
-      ]);
     } finally {
       setLoading(false);
     }
@@ -227,48 +184,51 @@ const StudentManagement: React.FC = () => {
     setShowDetailModal(true);
   };
 
-  const handleAddStudent = (data: any) => {
+  const handleAddStudent = async (data: any) => {
     if (editingId) {
-      setStudents((prev) =>
-        prev.map((student) =>
-          student.id === editingId
-            ? {
-                ...student,
-                name: data.fullName,
-                email: data.email,
-                phone: data.phone,
-                batch: data.batch,
-                section: data.section,
-                status: data.status,
-                bloodGroup: data.bloodGroup
-              }
-            : student
-        )
-      );
+      try {
+        const response = await adminService.updateStudent(editingId, {
+          name: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          batch: data.batch,
+          section: data.section,
+          status: data.status,
+          bloodGroup: data.bloodGroup
+        });
+        if (response.success) {
+          await fetchStudents();
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Failed to update student');
+      }
     } else {
       const generatedId = generateStudentId(data.batch, data.section);
       const generatedPassword = generateDefaultPassword(data.phone);
-      const newStudent: StudentRecord = {
-        id: String(students.length + 1),
-        name: data.fullName,
-        email: data.email,
-        phone: data.phone,
-        studentId: generatedId,
-        batch: data.batch,
-        section: data.section,
-        status: data.status || 'Active',
-        bloodGroup: data.bloodGroup,
-        registeredCourses: [],
-        attendance: 0,
-        cgpa: 0,
-        academicStanding: 'Good',
-        defaultPassword: generatedPassword
-      };
-      setStudents((prev) => [...prev, newStudent]);
-
-      alert(
-        `Student added successfully!\n\nStudent ID: ${generatedId}\nDefault Password: ${generatedPassword}\n\nShare these credentials with the student.`
-      );
+      try {
+        const response = await adminService.createStudent({
+          universityId: generatedId,
+          name: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          batch: data.batch,
+          section: data.section,
+          semester: 1,
+          status: data.status || 'Active',
+          bloodGroup: data.bloodGroup,
+          password: generatedPassword
+        });
+        if (response.success) {
+          await fetchStudents();
+          alert(
+            `Student added successfully!\n\nStudent ID: ${generatedId}\nDefault Password: ${generatedPassword}\n\nShare these credentials with the student.`
+          );
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Failed to create student');
+      }
     }
     setShowModal(false);
     setEditingId(null);
@@ -289,22 +249,46 @@ const StudentManagement: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleGraduateStudent = (student: StudentRecord) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === student.id ? { ...s, status: 'Graduated' } : s))
-    );
+  const handleGraduateStudent = async (student: StudentRecord) => {
+    try {
+      const response = await adminService.updateStudent(student.id, { status: 'Graduated' });
+      if (response.success) {
+        setStudents((prev) =>
+          prev.map((s) => (s.id === student.id ? { ...s, status: 'Graduated' } : s))
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to graduate student');
+    }
   };
 
-  const handleSuspendStudent = (student: StudentRecord) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === student.id ? { ...s, status: 'Suspended' } : s))
-    );
+  const handleSuspendStudent = async (student: StudentRecord) => {
+    try {
+      const response = await adminService.updateStudent(student.id, { status: 'Suspended' });
+      if (response.success) {
+        setStudents((prev) =>
+          prev.map((s) => (s.id === student.id ? { ...s, status: 'Suspended' } : s))
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to suspend student');
+    }
   };
 
-  const handleReactivateStudent = (student: StudentRecord) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === student.id ? { ...s, status: 'Active' } : s))
-    );
+  const handleReactivateStudent = async (student: StudentRecord) => {
+    try {
+      const response = await adminService.updateStudent(student.id, { status: 'Active' });
+      if (response.success) {
+        setStudents((prev) =>
+          prev.map((s) => (s.id === student.id ? { ...s, status: 'Active' } : s))
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to reactivate student');
+    }
   };
 
   const downloadTemplate = () => {

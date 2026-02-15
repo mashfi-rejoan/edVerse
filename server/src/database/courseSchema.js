@@ -82,8 +82,8 @@ courseMaterialSchema.index({ course: 1, createdAt: -1 });
 assignmentSubmissionSchema.index({ material: 1, student: 1 });
 
 module.exports = {
-  Course: mongoose.model('Course', courseSchema),
-  Enrollment: mongoose.model('Enrollment', enrollmentSchema),
-  CourseMaterial: mongoose.model('CourseMaterial', courseMaterialSchema),
-  AssignmentSubmission: mongoose.model('AssignmentSubmission', assignmentSubmissionSchema),
+  Course: mongoose.models.Course || mongoose.model('Course', courseSchema),
+  Enrollment: mongoose.models.Enrollment || mongoose.model('Enrollment', enrollmentSchema),
+  CourseMaterial: mongoose.models.CourseMaterial || mongoose.model('CourseMaterial', courseMaterialSchema),
+  AssignmentSubmission: mongoose.models.AssignmentSubmission || mongoose.model('AssignmentSubmission', assignmentSubmissionSchema),
 };

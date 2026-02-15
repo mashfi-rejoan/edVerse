@@ -48,6 +48,7 @@ export const seedStudents = async () => {
       const user = await User.create({
         name: studentData.name,
         email: studentData.email,
+        universityId: studentData.universityId,
         password: hashedPassword,
         role: 'student',
         isActive: true
@@ -80,7 +81,7 @@ export const seedStudents = async () => {
 
 if (require.main === module) {
   mongoose
-    .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/edverse')
+    .connect(process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/edverse')
     .then(async () => {
       await seedStudents();
       await mongoose.connection.close();

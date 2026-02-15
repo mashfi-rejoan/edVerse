@@ -9,6 +9,7 @@ const admins = [
   {
     name: 'System Administrator',
     email: 'admin@edverse.edu',
+    universityId: 'A-0001',
     password: 'admin123',
     role: 'admin',
     isActive: true
@@ -16,6 +17,7 @@ const admins = [
   {
     name: 'Academic Admin',
     email: 'academic.admin@edverse.edu',
+    universityId: 'A-0002',
     password: 'admin123',
     role: 'admin',
     isActive: true
@@ -43,7 +45,7 @@ export const seedAdmins = async () => {
 
 if (require.main === module) {
   mongoose
-    .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/edverse')
+    .connect(process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/edverse')
     .then(async () => {
       await seedAdmins();
       await mongoose.connection.close();

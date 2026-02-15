@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import AdminModal from '../../components/AdminModal';
 import AdminForm, { FormField } from '../../components/AdminForm';
 import { Megaphone, Plus, Edit, Eye, Send, Archive, Calendar } from 'lucide-react';
+import adminService from '../../services/adminService';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 interface AnnouncementRecord {
   id: string;
@@ -18,28 +20,9 @@ interface AnnouncementRecord {
 }
 
 const AnnouncementManagement: React.FC = () => {
-  const [announcements, setAnnouncements] = useState<AnnouncementRecord[]>([
-    {
-      id: 'ANN-1001',
-      title: 'Spring 2026 Registration Open',
-      scope: 'All',
-      status: 'Published',
-      createdBy: 'Admin Office',
-      createdDate: '2026-01-02',
-      publishedDate: '2026-01-03',
-      expiryDate: '2026-01-10',
-      content: 'Registration is now open for Spring 2026. Please complete before the deadline.'
-    },
-    {
-      id: 'ANN-1002',
-      title: 'Lab Safety Guidelines Updated',
-      scope: 'Students',
-      status: 'Draft',
-      createdBy: 'Admin Office',
-      createdDate: '2026-01-15',
-      content: 'Updated lab safety rules are ready for review.'
-    }
-  ]);
+  const [announcements, setAnnouncements] = useState<AnnouncementRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const [filters, setFilters] = useState({ status: 'All', scope: 'All' });
   const [showModal, setShowModal] = useState(false);
@@ -47,6 +30,36 @@ const AnnouncementManagement: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<AnnouncementRecord | null>(null);
   const [formDefaults, setFormDefaults] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  const fetchAnnouncements = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getAnnouncements();
+      if (response.success) {
+        const announcementRows = (response.data?.announcements || []).map((announcement: any) => ({
+          id: announcement._id,
+          title: announcement.title,
+          scope: announcement.scope,
+          status: announcement.status,
+          createdBy: announcement.createdBy?.name || 'Admin',
+          createdDate: announcement.createdAt ? new Date(announcement.createdAt).toISOString().slice(0, 10) : '',
+          publishedDate: announcement.publishedDate ? new Date(announcement.publishedDate).toISOString().slice(0, 10) : undefined,
+          expiryDate: announcement.expiryDate ? new Date(announcement.expiryDate).toISOString().slice(0, 10) : undefined,
+          content: announcement.content
+        }));
+        setAnnouncements(announcementRows);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load announcements');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredAnnouncements = useMemo(() => {
     return announcements.filter((item) => {
@@ -73,42 +86,39 @@ const AnnouncementManagement: React.FC = () => {
     { name: 'content', label: 'Content', type: 'textarea', required: true, placeholder: 'Write announcement details' }
   ];
 
-  const handleSave = (data: any) => {
-    if (editingId) {
-      setAnnouncements((prev) =>
-        prev.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                title: data.title,
-                scope: data.scope,
-                status: data.status,
-                expiryDate: data.expiryDate,
-                content: data.content,
-                publishedDate:
-                  data.status === 'Published' ? item.publishedDate || new Date().toISOString().slice(0, 10) : undefined
-              }
-            : item
-        )
-      );
-    } else {
-      const newItem: AnnouncementRecord = {
-        id: `ANN-${1000 + announcements.length + 1}`,
-        title: data.title,
-        scope: data.scope,
-        status: data.status,
-        createdBy: 'Admin Office',
-        createdDate: new Date().toISOString().slice(0, 10),
-        publishedDate: data.status === 'Published' ? new Date().toISOString().slice(0, 10) : undefined,
-        expiryDate: data.expiryDate,
-        content: data.content
-      };
-      setAnnouncements((prev) => [...prev, newItem]);
-    }
+  const handleSave = async (data: any) => {
+    try {
+      if (editingId) {
+        const response = await adminService.updateAnnouncement(editingId, {
+          title: data.title,
+          scope: data.scope,
+          status: data.status,
+          expiryDate: data.expiryDate,
+          content: data.content
+        });
+        if (response.success) {
+          await fetchAnnouncements();
+        }
+      } else {
+        const response = await adminService.createAnnouncement({
+          title: data.title,
+          scope: data.scope,
+          status: data.status,
+          expiryDate: data.expiryDate,
+          content: data.content
+        });
+        if (response.success) {
+          await fetchAnnouncements();
+        }
+      }
 
-    setShowModal(false);
-    setEditingId(null);
-    setFormDefaults({});
+      setShowModal(false);
+      setEditingId(null);
+      setFormDefaults({});
+    } catch (err) {
+      console.error(err);
+      setError('Failed to save announcement');
+    }
   };
 
   const handleEdit = (item: AnnouncementRecord) => {
@@ -123,20 +133,28 @@ const AnnouncementManagement: React.FC = () => {
     setShowModal(true);
   };
 
-  const handlePublish = (item: AnnouncementRecord) => {
-    setAnnouncements((prev) =>
-      prev.map((ann) =>
-        ann.id === item.id
-          ? { ...ann, status: 'Published', publishedDate: new Date().toISOString().slice(0, 10) }
-          : ann
-      )
-    );
+  const handlePublish = async (item: AnnouncementRecord) => {
+    try {
+      const response = await adminService.updateAnnouncement(item.id, { status: 'Published' });
+      if (response.success) {
+        await fetchAnnouncements();
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to publish announcement');
+    }
   };
 
-  const handleArchive = (item: AnnouncementRecord) => {
-    setAnnouncements((prev) =>
-      prev.map((ann) => (ann.id === item.id ? { ...ann, status: 'Archived' } : ann))
-    );
+  const handleArchive = async (item: AnnouncementRecord) => {
+    try {
+      const response = await adminService.deleteAnnouncement(item.id);
+      if (response.success) {
+        await fetchAnnouncements();
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to archive announcement');
+    }
   };
 
   const columns = [
@@ -181,8 +199,23 @@ const AnnouncementManagement: React.FC = () => {
     { label: 'Archive', onClick: handleArchive, color: 'red' as const, icon: <Archive size={18} /> }
   ];
 
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <LoadingSpinner text="Loading announcements..." />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                    {error}
+                  </div>
+                )}
         <PageHeader
           title="Announcements"
           subtitle="Create, publish, and archive campus announcements"

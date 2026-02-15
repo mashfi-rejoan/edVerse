@@ -11,7 +11,7 @@ const seedAll = async () => {
   try {
     console.log('🌱 Starting database seeding...\n');
 
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/edverse');
+    await mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/edverse');
     console.log('✓ Connected to database\n');
 
     await seedAdmins();

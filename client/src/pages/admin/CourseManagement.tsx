@@ -58,63 +58,24 @@ const CourseManagement: React.FC = () => {
       setLoading(true);
       const response = await adminService.getCourses();
       if (response.success) {
-        setCourses(response.data || []);
+        const courseRows = (response.data?.courses || []).map((course: any) => ({
+          id: course._id,
+          code: course.courseCode,
+          title: course.courseName,
+          credits: course.credits,
+          semester: course.semester,
+          description: course.description,
+          prerequisites: course.prerequisites || [],
+          isOffered: Boolean(course.isOffering),
+          offeringTerm: course.isOffering ? `${course.semester} ${course.academicYear}` : undefined,
+          archived: Boolean(course.archived),
+          hasSections: false
+        }));
+        setCourses(courseRows);
       }
     } catch (err) {
       setError('Failed to load courses');
       console.error(err);
-      // Mock data for demo
-      setCourses([
-        {
-          id: '1',
-          code: 'CSE101',
-          title: 'Programming Fundamentals',
-          credits: 3,
-          semester: 1,
-          description: 'Introduction to programming basics with C/C++',
-          prerequisites: [],
-          isOffered: true,
-          offeringTerm: 'Spring 2026',
-          archived: false,
-          hasSections: true
-        },
-        {
-          id: '2',
-          code: 'CSE201',
-          title: 'Data Structures',
-          credits: 3,
-          semester: 2,
-          description: 'Core data structures and algorithms',
-          prerequisites: ['CSE101'],
-          isOffered: true,
-          offeringTerm: 'Spring 2026',
-          archived: false
-        },
-        {
-          id: '3',
-          code: 'CSE205',
-          title: 'Digital Logic Design',
-          credits: 3,
-          semester: 2,
-          description: 'Digital logic, gates, circuits, and combinational design',
-          prerequisites: ['CSE101'],
-          isOffered: false,
-          offeringTerm: undefined,
-          archived: false
-        },
-        {
-          id: '4',
-          code: 'CSE305',
-          title: 'Operating Systems',
-          credits: 3,
-          semester: 5,
-          description: 'Process management, memory, and file systems',
-          prerequisites: ['CSE201'],
-          isOffered: false,
-          offeringTerm: undefined,
-          archived: true
-        }
-      ]);
     } finally {
       setLoading(false);
     }
@@ -197,45 +158,39 @@ const CourseManagement: React.FC = () => {
     setShowDetailModal(true);
   };
 
-  const handleAddCourse = (data: any) => {
+  const handleAddCourse = async (data: any) => {
     const isOffered = data.isOffered === 'Yes';
-    if (editingId) {
-      setCourses((prev) =>
-        prev.map((course) =>
-          course.id === editingId
-            ? {
-                ...course,
-                code: String(data.code || '').toUpperCase(),
-                title: data.title,
-                credits: Number(data.credits),
-                semester: Number(data.semester),
-                prerequisites: Array.isArray(data.prerequisites) ? data.prerequisites : [],
-                description: data.description,
-                isOffered,
-                offeringTerm: isOffered ? course.offeringTerm || `${offeringSemester} ${offeringYear}` : undefined
-              }
-            : course
-        )
-      );
-    } else {
-      const newCourse: CourseRecord = {
-        id: String(courses.length + 1),
-        code: String(data.code || '').toUpperCase(),
-        title: data.title,
-        credits: Number(data.credits),
-        semester: Number(data.semester),
-        prerequisites: Array.isArray(data.prerequisites) ? data.prerequisites : [],
-        description: data.description,
-        isOffered,
-        offeringTerm: isOffered ? `${offeringSemester} ${offeringYear}` : undefined,
-        archived: false
-      };
-      setCourses((prev) => [...prev, newCourse]);
-    }
+    const payload = {
+      courseCode: String(data.code || '').toUpperCase(),
+      courseName: data.title,
+      credits: Number(data.credits),
+      semester: Number(data.semester),
+      prerequisites: Array.isArray(data.prerequisites) ? data.prerequisites : [],
+      description: data.description,
+      isOffering: isOffered,
+      academicYear: offeringYear,
+      courseType: 'Theory'
+    };
 
-    setShowModal(false);
-    setEditingId(null);
-    setFormDefaults({});
+    try {
+      if (editingId) {
+        const response = await adminService.updateCourse(editingId, payload);
+        if (response.success) {
+          await fetchCourses();
+        }
+      } else {
+        const response = await adminService.createCourse(payload);
+        if (response.success) {
+          await fetchCourses();
+        }
+      }
+      setShowModal(false);
+      setEditingId(null);
+      setFormDefaults({});
+    } catch (err) {
+      console.error(err);
+      setError('Failed to save course');
+    }
   };
 
   const handleEditCourse = (course: CourseRecord) => {
@@ -252,22 +207,37 @@ const CourseManagement: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleArchiveCourse = (course: CourseRecord) => {
+  const handleArchiveCourse = async (course: CourseRecord) => {
     if (course.hasSections) {
       alert('Cannot archive course while sections are active.');
       return;
     }
-    if (confirm(`Archive ${course.code}?`)) {
-      setCourses((prev) =>
-        prev.map((item) => (item.id === course.id ? { ...item, archived: true } : item))
-      );
+    if (!confirm(`Archive ${course.code}?`)) return;
+    try {
+      const response = await adminService.deleteCourse(course.id);
+      if (response.success) {
+        setCourses((prev) =>
+          prev.map((item) => (item.id === course.id ? { ...item, archived: true } : item))
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to archive course');
     }
   };
 
-  const handleRestoreCourse = (course: CourseRecord) => {
-    setCourses((prev) =>
-      prev.map((item) => (item.id === course.id ? { ...item, archived: false } : item))
-    );
+  const handleRestoreCourse = async (course: CourseRecord) => {
+    try {
+      const response = await adminService.updateCourse(course.id, { archived: false });
+      if (response.success) {
+        setCourses((prev) =>
+          prev.map((item) => (item.id === course.id ? { ...item, archived: false } : item))
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to restore course');
+    }
   };
 
   const filteredCourses = courses.filter((course) => {
