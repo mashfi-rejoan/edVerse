@@ -16,3 +16,11 @@ uploads/
 server/uploads/
 seed-output/
 temp-profile.png
+!uploads/
+!uploads/.gitkeep
+!server/uploads/
+!server/uploads/.gitkeep
+server/uploads/profile-photos/*
+!server/uploads/profile-photos/.gitkeep
+!seed-output/
+!seed-output/.gitkeep
